@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {Sun } from "lucide-react"
 import { Globe } from "lucide-react"
+import Image from "next/image"
 
 export function Header() {
   return (
@@ -13,36 +14,12 @@ export function Header() {
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                className="h-6 w-6 text-primary-foreground"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+              <Image
+                src="/Logo-Icon.svg"
+                alt="Plan'Event Logo"
+                width={24}
+                height={24}
+              />
             <span className="text-xl font-bold">Plan'Event</span>
           </div>
 
@@ -75,10 +52,10 @@ export function Header() {
               }}
               title="Basculer thème clair / sombre"
             >
-              <Sun className="h-4 w-4" /> Clair
+              <Sun className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm">
-              <Globe className="h-4 w-4" /> Français
+              <Globe className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm">
               Se connecter
