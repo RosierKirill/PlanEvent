@@ -13,7 +13,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 async function fetchEvent(id: string) {
-async function fetchEvent(id: string) {
   const base = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE || "";
   const url = `${String(base).replace(/\/$/, "")}/events/${encodeURIComponent(
     id
