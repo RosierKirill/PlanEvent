@@ -1,3 +1,4 @@
+import * as React from "react"
 import { CategoryFilter } from "@/components/category-filter"
 import { GroupGrid } from "@/components/group-grid"
 
@@ -6,8 +7,12 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Groupes Musique à proximité de Lyon, FR</h1>
-        <CategoryFilter />
-        <GroupGrid />
+        <React.Suspense fallback={<div>Chargement des catégories...</div>}>
+          <CategoryFilter />
+        </React.Suspense>
+        <React.Suspense fallback={<div>Chargement des groupes...</div>}>
+          <GroupGrid />
+        </React.Suspense>
       </main>
     </div>
   )
