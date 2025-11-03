@@ -22,7 +22,7 @@ export function RoomCard({ room }: RoomCardProps) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="flex gap-4 p-4">
         {/* Image */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <img
             src={room.image || "/placeholder.svg"}
             alt={room.title}
