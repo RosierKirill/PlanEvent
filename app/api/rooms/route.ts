@@ -4,7 +4,7 @@ const BASE = process.env.API_BASE || ''
 
 export async function GET(request: Request) {
   try {
-    const url = `${String(BASE).replace(/\/$/, '')}/groups${new URL(request.url).search}`
+    const url = `${String(BASE).replace(/\/$/, '')}/rooms${new URL(request.url).search}`
     const auth = request.headers.get('authorization') || request.headers.get('Authorization')
     const headers: Record<string, string> = { accept: 'application/json' }
     if (auth) headers['authorization'] = auth

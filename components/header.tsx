@@ -14,7 +14,7 @@ export function Header() {
   const [mounted, setMounted] = React.useState(false)
   const router = useRouter()
   const [query, setQuery] = React.useState("")
-  const [scope, setScope] = React.useState<"groups" | "events">("groups")
+  const [scope, setScope] = React.useState<"rooms" | "events">("rooms")
 
   React.useEffect(() => {
     setMounted(true)
@@ -45,10 +45,10 @@ export function Header() {
               <select
                 aria-label="scope"
                 value={scope}
-                onChange={(e) => setScope(e.target.value as "groups" | "events")}
+                onChange={(e) => setScope(e.target.value as "rooms" | "events")}
                 className="rounded-md border px-2 py-1 bg-background text-sm"
               >
-                <option value="groups">Groupes</option>
+                <option value="rooms">Salles</option>
                 <option value="events">Événements</option>
               </select>
             </div>
@@ -58,7 +58,7 @@ export function Header() {
                 onSubmit={(e) => {
                   e.preventDefault()
                   const encoded = encodeURIComponent(query.trim())
-                  const path = scope === "events" ? "/events" : "/groups"
+                  const path = scope === "events" ? "/events" : "/rooms"
                   router.push(encoded ? `${path}?q=${encoded}` : path)
                 }}
               >
@@ -66,7 +66,7 @@ export function Header() {
                   value={query}
                   onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
                   type="text"
-                  placeholder="Rechercher événements ou groupes"
+                  placeholder="Rechercher événements ou salles"
                   className="pr-20"
                 />
 

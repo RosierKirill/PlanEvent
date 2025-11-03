@@ -1,24 +1,21 @@
-
 "use client"
 import * as React from "react"
-import { GroupCard } from "@/components/group-card"
+import { RoomCard } from "@/components/room-card"
 import { useSearchParams } from "next/navigation"
 
-export function GroupGrid() {
-  const [groups, setGroups] = React.useState<any[]>([])
+export function RoomGrid() {
+  const [rooms, setRooms] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
   const searchParams = useSearchParams()
-  const tag = searchParams?.get("tag")
   const q = searchParams?.get("q")
 
   React.useEffect(() => {
     setLoading(true)
     const params = new URLSearchParams()
-    if (tag) params.set("tag", tag)
     if (q) params.set("q", q)
-    const url = `/api/groups${params.toString() ? `?${params.toString()}` : ""}`
+    const url = `/api/rooms${params.toString() ? `?${params.toString()}` : ""}`
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     const headers: Record<string, string> = {}
     if (token) headers['authorization'] = `Bearer ${token}`
@@ -32,22 +29,22 @@ export function GroupGrid() {
         return JSON.parse(text)
       })
       .then((data) => {
-        setGroups(data)
+        setRooms(data)
         setLoading(false)
       })
       .catch((err) => {
         setError(err.message)
         setLoading(false)
       })
-  }, [tag, q])
+  }, [q])
 
-  if (loading) return <div>Chargement des groupes...</div>
+  if (loading) return <div>Chargement des salles...</div>
   if (error) return <div className="text-red-500">Erreur : {error}</div>
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {groups.map((group) => (
-        <GroupCard key={group.id} group={group} />
+      {rooms.map((room) => (
+        <RoomCard key={room.id} room={room} />
       ))}
     </div>
   )

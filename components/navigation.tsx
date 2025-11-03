@@ -25,17 +25,17 @@ export function Navigation() {
               Événements
             </Button>
           </Link>
-          <Link href="/groups">
+          <Link href="/rooms">
             <Button 
               variant="ghost" 
               className={`gap-2 rounded-none border-b-2 ${
-                pathname === "/groups" 
+                pathname === "/rooms" 
                   ? "border-primary" 
                   : "border-transparent hover:border-primary"
               }`}
             >
               <Users className="h-4 w-4" />
-              Groupes
+              Salles
             </Button>
           </Link>
         </div>
