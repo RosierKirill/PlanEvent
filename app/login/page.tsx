@@ -1,5 +1,5 @@
-import LoginForm from "@/components/login-form"
-import Link from "next/link"
+import LoginForm from "@/components/login-form";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -7,8 +7,11 @@ export default function LoginPage() {
       <h1 className="text-2xl font-bold mb-4">Se connecter</h1>
       <LoginForm />
       <div className="mt-4 text-sm">
-        Pas encore de compte ? <Link href="/signup" className="text-primary hover:underline">Créer un compte</Link>
+        Pas encore de compte ?{" "}
+        <Link href="/signup" className="text-primary hover:underline">
+          Créer un compte
+        </Link>
       </div>
     </main>
-  )
+  );
 }

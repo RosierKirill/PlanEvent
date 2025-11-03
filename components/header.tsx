@@ -1,41 +1,41 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, X, Sun, Moon, Globe } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useTheme } from "next-themes"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Globe, Moon, Search, Sun, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export function Header() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-  const router = useRouter()
-  const [query, setQuery] = React.useState("")
-  const [scope, setScope] = React.useState<"rooms" | "events">("rooms")
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  const router = useRouter();
+  const [query, setQuery] = React.useState("");
+  const [scope, setScope] = React.useState<"rooms" | "events">("rooms");
 
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
-  
+
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-              <Image
-                src="/Logo-Icon.svg"
-                alt="Plan'Event Logo"
-                width={24}
-                height={24}
-              />
+            <Image
+              src="/Logo-Icon.svg"
+              alt="Plan'Event Logo"
+              width={24}
+              height={24}
+            />
             <span className="text-xl font-bold">Plan'Event</span>
           </div>
 
@@ -56,15 +56,17 @@ export function Header() {
             <div className="relative flex-1">
               <form
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  const encoded = encodeURIComponent(query.trim())
-                  const path = scope === "events" ? "/events" : "/rooms"
-                  router.push(encoded ? `${path}?q=${encoded}` : path)
+                  e.preventDefault();
+                  const encoded = encodeURIComponent(query.trim());
+                  const path = scope === "events" ? "/events" : "/rooms";
+                  router.push(encoded ? `${path}?q=${encoded}` : path);
                 }}
               >
                 <Input
                   value={query}
-                  onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
+                  onChange={(e) =>
+                    setQuery((e.target as HTMLInputElement).value)
+                  }
                   type="text"
                   placeholder="Rechercher événements ou salles"
                   className="pr-20"
@@ -97,7 +99,7 @@ export function Header() {
               size="sm"
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               title="Basculer thème clair / sombre"
->
+            >
               {resolvedTheme === "dark" ? (
                 <Sun className="h-4 w-4 mr-2" />
               ) : (
@@ -109,7 +111,9 @@ export function Header() {
             </Button>
             {/* Link to login page */}
             <Link href="/login">
-              <Button variant="ghost" size="sm">Se connecter</Button>
+              <Button variant="ghost" size="sm">
+                Se connecter
+              </Button>
             </Link>
             <Button size="sm" className="bg-primary text-primary-foreground">
               S'inscrire
@@ -118,5 +122,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }

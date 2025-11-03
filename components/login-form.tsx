@@ -1,48 +1,56 @@
-"use client"
-import * as React from "react"
-import { useRouter } from "next/navigation"
+"use client";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export default function LoginForm() {
-  const router = useRouter()
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const router = useRouter();
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-      })
-      const dataText = await res.text()
-      const ct = res.headers.get('content-type') || ''
-      const data = ct.includes('application/json') ? JSON.parse(dataText) : { raw: dataText }
+      });
+      const dataText = await res.text();
+      const ct = res.headers.get("content-type") || "";
+      const data = ct.includes("application/json")
+        ? JSON.parse(dataText)
+        : { raw: dataText };
 
       if (!res.ok) {
-        setError(data?.error || data?.message || data?.raw || 'Erreur lors de la connexion')
-        setLoading(false)
-        return
+        setError(
+          data?.error ||
+            data?.message ||
+            data?.raw ||
+            "Erreur lors de la connexion"
+        );
+        setLoading(false);
+        return;
       }
 
       // tolerate several token shapes returned by upstream
-      const token = data?.token || data?.access_token || data?.jwt || data?.data?.token
-      const user = data?.user || data?.profile || data?.data || data
+      const token =
+        data?.token || data?.access_token || data?.jwt || data?.data?.token;
+      const user = data?.user || data?.profile || data?.data || data;
 
       try {
-        if (token) localStorage.setItem('token', token)
-        if (user) localStorage.setItem('user', JSON.stringify(user))
+        if (token) localStorage.setItem("token", token);
+        if (user) localStorage.setItem("user", JSON.stringify(user));
       } catch (e) {}
 
-      router.push('/')
+      router.push("/");
     } catch (err: any) {
-      setError(err?.message || "Erreur réseau")
-      setLoading(false)
+      setError(err?.message || "Erreur réseau");
+      setLoading(false);
     }
   }
 
@@ -81,5 +89,5 @@ export default function LoginForm() {
         </button>
       </div>
     </form>
-  )
+  );
 }

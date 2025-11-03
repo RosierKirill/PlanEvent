@@ -1,5 +1,5 @@
-import * as React from "react"
-import { RoomGrid } from "@/components/room-grid"
+import { RoomGrid } from "@/components/room-grid";
+import * as React from "react";
 
 export default function RoomsPage() {
   return (
@@ -9,5 +9,5 @@ export default function RoomsPage() {
         <RoomGrid />
       </React.Suspense>
     </main>
-  )
+  );
 }

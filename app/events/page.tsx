@@ -1,5 +1,5 @@
-import * as React from "react"
-import EventsList from "@/components/events-list"
+import EventsList from "@/components/events-list";
+import * as React from "react";
 
 export default function EventsPage() {
   return (
@@ -9,5 +9,5 @@ export default function EventsPage() {
         <EventsList />
       </React.Suspense>
     </main>
-  )
+  );
 }

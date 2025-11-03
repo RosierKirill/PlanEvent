@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronRight, Sparkles, Users, Heart, Dumbbell, Plane, Briefcase, Cpu, Home, Music } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ChevronRight, Cpu, Music, Sparkles, Users } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
 
 const iconMap: Record<string, any> = {
   music: Music,
@@ -15,50 +15,54 @@ const iconMap: Record<string, any> = {
   production: Cpu,
   nightlife: Sparkles,
   indie: Music,
-}
+};
 
 export function CategoryFilter() {
-  const [tags, setTags] = React.useState<Array<{ id: string; label: string }>>([])
-  const [loading, setLoading] = React.useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const activeTag = searchParams?.get("tag")
+  const [tags, setTags] = React.useState<Array<{ id: string; label: string }>>(
+    []
+  );
+  const [loading, setLoading] = React.useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTag = searchParams?.get("tag");
 
   React.useEffect(() => {
-    setLoading(true)
-    const url = `/api/tags`
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    const headers: Record<string, string> = {}
-    if (token) headers['authorization'] = `Bearer ${token}`
+    setLoading(true);
+    const url = `/api/tags`;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["authorization"] = `Bearer ${token}`;
 
     fetch(url, { headers })
       .then(async (res) => {
-        const ct = res.headers.get("content-type") || ""
-        const text = await res.text()
-        if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`)
-        if (!ct.includes("application/json")) throw new Error("Réponse non JSON du serveur")
-        return JSON.parse(text)
+        const ct = res.headers.get("content-type") || "";
+        const text = await res.text();
+        if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`);
+        if (!ct.includes("application/json"))
+          throw new Error("Réponse non JSON du serveur");
+        return JSON.parse(text);
       })
       .then((data) => {
-        setTags(data)
-        setLoading(false)
+        setTags(data);
+        setLoading(false);
       })
-      .catch(() => setLoading(false))
-  }, [])
+      .catch(() => setLoading(false));
+  }, []);
 
   function onSelect(tagId?: string) {
-    const params = new URLSearchParams(Array.from(searchParams || []))
+    const params = new URLSearchParams(Array.from(searchParams || []));
     if (!tagId) {
-      params.delete("tag")
+      params.delete("tag");
     } else {
-      params.set("tag", tagId)
+      params.set("tag", tagId);
     }
-    const qs = params.toString()
-    router.push(qs ? `${pathname}?${qs}` : pathname)
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
   }
 
-  if (loading) return <div className="mb-8">Chargement des catégories...</div>
+  if (loading) return <div className="mb-8">Chargement des catégories...</div>;
 
   return (
     <div className="mb-8">
@@ -67,7 +71,9 @@ export function CategoryFilter() {
           <Button
             variant="ghost"
             onClick={() => onSelect(undefined)}
-            className={`flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px] ${!activeTag ? "border-b-2 border-primary" : ""}`}
+            className={`flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px] ${
+              !activeTag ? "border-b-2 border-primary" : ""
+            }`}
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
               <Sparkles className="h-5 w-5" />
@@ -76,24 +82,29 @@ export function CategoryFilter() {
           </Button>
 
           {tags.map((t) => {
-            const Icon = iconMap[t.id] || Sparkles
-            const isActive = activeTag === t.id
+            const Icon = iconMap[t.id] || Sparkles;
+            const isActive = activeTag === t.id;
             return (
               <Button
                 key={t.id}
                 variant="ghost"
                 onClick={() => onSelect(t.id)}
-                className={`flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px] ${isActive ? "border-b-2 border-primary" : ""}`}
+                className={`flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px] ${
+                  isActive ? "border-b-2 border-primary" : ""
+                }`}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className="text-xs text-center">{t.label}</span>
               </Button>
-            )
+            );
           })}
 
-          <Button variant="ghost" className="flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px]">
+          <Button
+            variant="ghost"
+            className="flex flex-col items-center gap-2 h-auto py-3 px-4 min-w-[100px]"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
               <ChevronRight className="h-5 w-5 text-primary-foreground" />
             </div>
@@ -102,5 +113,5 @@ export function CategoryFilter() {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
-  )
+  );
 }
