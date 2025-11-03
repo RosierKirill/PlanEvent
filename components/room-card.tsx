@@ -5,18 +5,15 @@ import { Star } from "lucide-react";
 
 interface RoomCardProps {
   room: {
-    id?: number | string;
-    title?: string;
-    location?: string;
-    rating?: number;
-    description?: string;
-    members?: number;
-    image?: string;
+    id: string;
+    name?: string;
+    user_id: string;
+    event_id: string;
   };
 }
 
 export function RoomCard({ room }: RoomCardProps) {
-  const title = room.title || "Salle sans titre";
+  const title = room.name || "Salle sans titre";
   const locationText = room.location || "Lieu inconnu";
   const rating = typeof room.rating === "number" ? room.rating : 0;
   const members = typeof room.members === "number" ? room.members : 0;
@@ -45,7 +42,9 @@ export function RoomCard({ room }: RoomCardProps) {
         <div className="flex flex-1 flex-col justify-between bg-accent/50 rounded-lg p-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-muted-foreground">{locationText}</span>
+              <span className="text-sm text-muted-foreground">
+                {locationText}
+              </span>
               <span className="text-sm">•</span>
               <div className="flex items-center gap-1">
                 <span className="text-sm font-medium">{rating}</span>

@@ -124,6 +124,18 @@ export default async function EventPage({ params }: Props) {
           </Card>
         </aside>
       </div>
+      {event.tags && Array.isArray(event.tags) && event.tags.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {event.tags.map((tag: string, idx: number) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </main>
   );
 }
