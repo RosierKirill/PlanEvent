@@ -1,3 +1,5 @@
+"use client"
+
 import { Star } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,6 +27,12 @@ export function GroupCard({ group }: GroupCardProps) {
             src={group.image || "/placeholder.svg"}
             alt={group.title}
             className="h-32 w-44 rounded-lg object-cover"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement
+              if (target.src !== location.origin + "/placeholder.svg") {
+                target.src = "/placeholder.svg"
+              }
+            }}
           />
         </div>
 
@@ -48,7 +56,15 @@ export function GroupCard({ group }: GroupCardProps) {
             <div className="flex -space-x-2">
               {group.memberAvatars.map((avatar, index) => (
                 <Avatar key={index} className="h-8 w-8 border-2 border-background">
-                  <AvatarImage src={avatar || "/placeholder.svg"} />
+                  <AvatarImage
+                    src={avatar}
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement
+                      if (target.src !== location.origin + "/placeholder.svg") {
+                        target.src = "/placeholder.svg"
+                      }
+                    }}
+                  />
                   <AvatarFallback>M{index + 1}</AvatarFallback>
                 </Avatar>
               ))}

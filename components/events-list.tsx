@@ -1,11 +1,9 @@
-
 "use client"
 import * as React from "react"
-import { GroupCard } from "@/components/group-card"
 import { useSearchParams } from "next/navigation"
 
-export function GroupGrid() {
-  const [groups, setGroups] = React.useState<any[]>([])
+export default function EventsList() {
+  const [events, setEvents] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -18,7 +16,8 @@ export function GroupGrid() {
     const params = new URLSearchParams()
     if (tag) params.set("tag", tag)
     if (q) params.set("q", q)
-    const url = `/api/groups${params.toString() ? `?${params.toString()}` : ""}`
+    const url = `/api/events${params.toString() ? `?${params.toString()}` : ""}`
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     const headers: Record<string, string> = {}
     if (token) headers['authorization'] = `Bearer ${token}`
@@ -32,7 +31,7 @@ export function GroupGrid() {
         return JSON.parse(text)
       })
       .then((data) => {
-        setGroups(data)
+        setEvents(data)
         setLoading(false)
       })
       .catch((err) => {
@@ -41,13 +40,21 @@ export function GroupGrid() {
       })
   }, [tag, q])
 
-  if (loading) return <div>Chargement des groupes...</div>
+  if (loading) return <div>Chargement des événements...</div>
   if (error) return <div className="text-red-500">Erreur : {error}</div>
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {groups.map((group) => (
-        <GroupCard key={group.id} group={group} />
+    <div className="space-y-4">
+      {events.map((ev) => (
+        <a
+          key={ev.id}
+          href={`/events/${ev.id}`}
+          className="block p-4 border rounded-lg bg-card hover:shadow-md transition"
+        >
+          <h3 className="text-lg font-semibold">{ev.title}</h3>
+          <div className="text-sm text-muted-foreground">{ev.date} — {ev.location}</div>
+          <p className="mt-2 text-sm">{ev.description}</p>
+        </a>
       ))}
     </div>
   )

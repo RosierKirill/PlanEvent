@@ -1,13 +1,29 @@
 "use client"
 
-import { Search, X } from "lucide-react"
+import * as React from "react"
+import { Search, X, Sun, Moon, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {Sun } from "lucide-react"
-import { Globe } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 
 export function Header() {
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+  const router = useRouter()
+  const [query, setQuery] = React.useState("")
+  const [scope, setScope] = React.useState<"groups" | "events">("groups")
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+  
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto px-4 py-4">
@@ -25,14 +41,52 @@ export function Header() {
 
           {/* Search Bar */}
           <div className="flex flex-1 max-w-2xl items-center gap-2">
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="scope"
+                value={scope}
+                onChange={(e) => setScope(e.target.value as "groups" | "events")}
+                className="rounded-md border px-2 py-1 bg-background text-sm"
+              >
+                <option value="groups">Groupes</option>
+                <option value="events">Événements</option>
+              </select>
+            </div>
+
             <div className="relative flex-1">
-              <Input type="text" placeholder="Faites une recherche!" className="pr-20" />
-              <Button variant="ghost" size="icon" className="absolute right-8 top-0 h-full">
-                <X className="h-4 w-4" />
-              </Button>
-              <Button size="icon" className="absolute right-0 top-0 h-full rounded-full bg-primary">
-                <Search className="h-4 w-4" />
-              </Button>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const encoded = encodeURIComponent(query.trim())
+                  const path = scope === "events" ? "/events" : "/groups"
+                  router.push(encoded ? `${path}?q=${encoded}` : path)
+                }}
+              >
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
+                  type="text"
+                  placeholder="Rechercher événements ou groupes"
+                  className="pr-20"
+                />
+
+                <button
+                  type="button"
+                  aria-label="clear search"
+                  onClick={() => setQuery("")}
+                  className="absolute right-8 top-0 h-full flex items-center"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="submit"
+                  aria-label="submit search"
+                  className="absolute right-0 top-0 h-full rounded-full bg-primary px-3 flex items-center"
+                >
+                  <Search className="h-4 w-4 text-white" />
+                </button>
+              </form>
             </div>
           </div>
 
@@ -41,25 +95,22 @@ export function Header() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-              const root = document.documentElement;
-              const isDark = root.classList.toggle("dark");
-              try {
-                localStorage.setItem("theme", isDark ? "dark" : "light");
-              } catch (e) {
-                /* ignore storage errors */
-              }
-              }}
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               title="Basculer thème clair / sombre"
-            >
-              <Sun className="h-4 w-4" />
+>
+              {resolvedTheme === "dark" ? (
+                <Sun className="h-4 w-4 mr-2" />
+              ) : (
+                <Moon className="h-4 w-4 mr-2" />
+              )}
             </Button>
             <Button variant="ghost" size="sm">
               <Globe className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              Se connecter
-            </Button>
+            {/* Link to login page */}
+            <Link href="/login">
+              <Button variant="ghost" size="sm">Se connecter</Button>
+            </Link>
             <Button size="sm" className="bg-primary text-primary-foreground">
               S'inscrire
             </Button>
