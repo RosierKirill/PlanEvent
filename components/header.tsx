@@ -1,24 +1,37 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Globe, Moon, Search, Sun, X } from "lucide-react";
-import { useTheme } from "next-themes";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as React from "react";
+import * as React from "react"
+import { Search, X, Sun, Moon, Globe, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
 
 export function Header() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  const router = useRouter();
-  const [query, setQuery] = React.useState("");
-  const [scope, setScope] = React.useState<"rooms" | "events">("rooms");
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+  const router = useRouter()
+  const [query, setQuery] = React.useState("")
+  const [scope, setScope] = React.useState<"rooms" | "events">("rooms")
+  const [isAuthed, setIsAuthed] = React.useState(false)
 
   React.useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
+
+  React.useEffect(() => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      setIsAuthed(!!token)
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === 'token') setIsAuthed(!!e.newValue)
+      }
+      window.addEventListener('storage', onStorage)
+      return () => window.removeEventListener('storage', onStorage)
+    } catch {}
+  }, [])
 
   if (!mounted) {
     return null;
@@ -109,15 +122,25 @@ export function Header() {
             <Button variant="ghost" size="sm">
               <Globe className="h-4 w-4" />
             </Button>
-            {/* Link to login page */}
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                Se connecter
-              </Button>
-            </Link>
-            <Button size="sm" className="bg-primary text-primary-foreground">
-              S'inscrire
-            </Button>
+            {isAuthed ? (
+              <Link href="/users/me" aria-label="Profil">
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                {/* Link to login page */}
+                <Link href="/login">
+                  <Button variant="ghost" size="sm">Se connecter</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="bg-primary text-primary-foreground">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

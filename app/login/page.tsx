@@ -8,7 +8,7 @@ export default function LoginPage() {
       <LoginForm />
       <div className="mt-4 text-sm">
         Pas encore de compte ?{" "}
-        <Link href="/signup" className="text-primary hover:underline">
+        <Link href="/register" className="text-primary hover:underline">
           Créer un compte
         </Link>
       </div>
