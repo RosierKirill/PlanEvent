@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-async function fetchEvent(id: number) {
+async function fetchEvent(id: string) {
   const base = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE || "";
-  const url = `${String(base).replace(/\/$/, "")}/events/${id}`;
+  const url = `${String(base).replace(/\/$/, "")}/events/${encodeURIComponent(id)}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   return res.json();
@@ -17,7 +17,7 @@ interface Props {
 export default async function EventPage({ params }: Props) {
   // In Next.js App Router params can be a Promise in some runtimes — unwrap it safely
   const resolvedParams = await params;
-  const id = Number(resolvedParams.id);
+  const id = String(resolvedParams.id);
   const event = await fetchEvent(id);
 
   if (!event) return notFound();

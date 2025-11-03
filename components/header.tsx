@@ -83,14 +83,14 @@ export function Header() {
                   }
                   type="text"
                   placeholder="Rechercher événements ou salles"
-                  className="pr-20"
+                  className="pr-28"
                 />
 
                 <button
                   type="button"
                   aria-label="clear search"
                   onClick={() => setQuery("")}
-                  className="absolute right-8 top-0 h-full flex items-center"
+                  className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center z-10"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -98,7 +98,7 @@ export function Header() {
                 <button
                   type="submit"
                   aria-label="submit search"
-                  className="absolute right-0 top-0 h-full rounded-full bg-primary px-3 flex items-center"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-primary px-3 py-1.5 flex items-center z-20"
                 >
                   <Search className="h-4 w-4 text-white" />
                 </button>
