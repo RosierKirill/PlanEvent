@@ -62,7 +62,27 @@ export default function EventsList() {
           throw new Error("Format de réponse inattendu pour les événements");
         }
 
-        setEvents(list);
+        // Client-side filtering if backend doesn't filter by `q`
+        let filtered = list;
+        if (q && typeof q === "string" && q.trim()) {
+          const needle = q.trim().toLowerCase();
+          filtered = list.filter((ev: any) => {
+            const title = String(ev.title || ev.name || "").toLowerCase();
+            const desc = String(ev.description || "").toLowerCase();
+            const loc = String(ev.location || "").toLowerCase();
+            const tags = Array.isArray(ev.tags)
+              ? ev.tags.map((t: any) => String(t)).join(" ").toLowerCase()
+              : "";
+            return (
+              title.includes(needle) ||
+              desc.includes(needle) ||
+              loc.includes(needle) ||
+              tags.includes(needle)
+            );
+          });
+        }
+
+        setEvents(filtered);
         setLoading(false);
       })
       .catch((err) => {
