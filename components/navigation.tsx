@@ -6,9 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function Navigation() {
-  const pathname = usePathname()
-  const isEvents = pathname?.startsWith("/events")
-  const isRooms = pathname?.startsWith("/rooms")
+  const pathname = usePathname();
+  const isEvents = pathname?.startsWith("/events");
+  const isRooms = pathname?.startsWith("/rooms");
 
   return (
     <nav className="border-b bg-background">
@@ -18,8 +18,8 @@ export function Navigation() {
             <Button
               variant="ghost"
               className={`gap-2 rounded-none border-b-2 ${
-                isEvents 
-                  ? "border-primary" 
+                isEvents
+                  ? "border-primary"
                   : "border-transparent hover:border-primary"
               }`}
             >
@@ -31,8 +31,8 @@ export function Navigation() {
             <Button
               variant="ghost"
               className={`gap-2 rounded-none border-b-2 ${
-                isRooms 
-                  ? "border-primary" 
+                isRooms
+                  ? "border-primary"
                   : "border-transparent hover:border-primary"
               }`}
             >

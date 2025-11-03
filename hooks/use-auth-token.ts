@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from "react";
 
 export function useAuthToken() {
-  const [token, setToken] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Only access localStorage after component mounts on client
-    setToken(localStorage.getItem('token'))
-  }, [])
+    setToken(localStorage.getItem("token"));
+  }, []);
 
-  return token
+  return token;
 }

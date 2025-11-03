@@ -23,30 +23,35 @@ export function RoomGrid() {
 
     fetch(url, { headers })
       .then(async (res) => {
-        const ct = res.headers.get("content-type") || ""
-        const text = await res.text()
-        if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`)
-        if (!ct.includes("application/json")) throw new Error("Réponse non JSON du serveur")
+        const ct = res.headers.get("content-type") || "";
+        const text = await res.text();
+        if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`);
+        if (!ct.includes("application/json"))
+          throw new Error("Réponse non JSON du serveur");
         try {
-          return JSON.parse(text)
+          return JSON.parse(text);
         } catch (e: any) {
-          throw new Error(`Impossible de parser la réponse JSON: ${e.message}`)
+          throw new Error(`Impossible de parser la réponse JSON: ${e.message}`);
         }
       })
       .then((data) => {
         // Normalize: Array | { rooms } | { data } | { items } | { results }
-        let list: any[] = []
-        if (Array.isArray(data)) list = data
-        else if (data && typeof data === 'object') {
-          list = (data.rooms || data.data || data.items || data.results || []) as any[]
+        let list: any[] = [];
+        if (Array.isArray(data)) list = data;
+        else if (data && typeof data === "object") {
+          list = (data.rooms ||
+            data.data ||
+            data.items ||
+            data.results ||
+            []) as any[];
         }
 
         if (!Array.isArray(list)) {
-          throw new Error('Format de réponse inattendu pour les salles')
+          throw new Error("Format de réponse inattendu pour les salles");
         }
 
-        setRooms(list)
-        setLoading(false)
+        setRooms(list);
+        setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
@@ -66,4 +71,3 @@ export function RoomGrid() {
     </div>
   );
 }
-

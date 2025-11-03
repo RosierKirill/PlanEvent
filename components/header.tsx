@@ -1,37 +1,38 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, X, Sun, Moon, Globe, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useTheme } from "next-themes"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Globe, Moon, Search, Sun, User, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export function Header() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-  const router = useRouter()
-  const [query, setQuery] = React.useState("")
-  const [scope, setScope] = React.useState<"rooms" | "events">("rooms")
-  const [isAuthed, setIsAuthed] = React.useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  const router = useRouter();
+  const [query, setQuery] = React.useState("");
+  const [scope, setScope] = React.useState<"rooms" | "events">("rooms");
+  const [isAuthed, setIsAuthed] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      setIsAuthed(!!token)
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      setIsAuthed(!!token);
       const onStorage = (e: StorageEvent) => {
-        if (e.key === 'token') setIsAuthed(!!e.newValue)
-      }
-      window.addEventListener('storage', onStorage)
-      return () => window.removeEventListener('storage', onStorage)
+        if (e.key === "token") setIsAuthed(!!e.newValue);
+      };
+      window.addEventListener("storage", onStorage);
+      return () => window.removeEventListener("storage", onStorage);
     } catch {}
-  }, [])
+  }, []);
 
   if (!mounted) {
     return null;
@@ -132,10 +133,15 @@ export function Header() {
               <>
                 {/* Link to login page */}
                 <Link href="/login">
-                  <Button variant="ghost" size="sm">Se connecter</Button>
+                  <Button variant="ghost" size="sm">
+                    Se connecter
+                  </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="bg-primary text-primary-foreground">
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground"
+                  >
                     S'inscrire
                   </Button>
                 </Link>

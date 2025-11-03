@@ -1,47 +1,55 @@
-"use client"
-import * as React from "react"
-import { useRouter } from "next/navigation"
+"use client";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export default function RegisterForm() {
-  const router = useRouter()
-  const [name, setName] = React.useState("")
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const router = useRouter();
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
-      })
-      const dataText = await res.text()
-      const ct = res.headers.get('content-type') || ''
-      const data = ct.includes('application/json') ? JSON.parse(dataText) : { raw: dataText }
+      });
+      const dataText = await res.text();
+      const ct = res.headers.get("content-type") || "";
+      const data = ct.includes("application/json")
+        ? JSON.parse(dataText)
+        : { raw: dataText };
 
       if (!res.ok) {
-        setError(data?.error || data?.message || data?.raw || 'Erreur lors de la création du compte')
-        setLoading(false)
-        return
+        setError(
+          data?.error ||
+            data?.message ||
+            data?.raw ||
+            "Erreur lors de la création du compte"
+        );
+        setLoading(false);
+        return;
       }
 
-      const token = data?.token || data?.access_token || data?.jwt || data?.data?.token
-      const user = data?.user || data?.profile || data?.data || data
+      const token =
+        data?.token || data?.access_token || data?.jwt || data?.data?.token;
+      const user = data?.user || data?.profile || data?.data || data;
       try {
-        if (token) localStorage.setItem('token', token)
-        if (user) localStorage.setItem('user', JSON.stringify(user))
+        if (token) localStorage.setItem("token", token);
+        if (user) localStorage.setItem("user", JSON.stringify(user));
       } catch (e) {}
 
-      router.push('/')
+      router.push("/");
     } catch (err: any) {
-      setError(err?.message || "Erreur réseau")
-      setLoading(false)
+      setError(err?.message || "Erreur réseau");
+      setLoading(false);
     }
   }
 
@@ -92,5 +100,5 @@ export default function RegisterForm() {
         </button>
       </div>
     </form>
-  )
+  );
 }

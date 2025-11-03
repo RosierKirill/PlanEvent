@@ -19,4 +19,4 @@ export const events = [
     attendees: 32,
     tags: ["workshop", "music", "production"],
   },
-]
+];
