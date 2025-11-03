@@ -38,6 +38,8 @@ export function useAuth() {
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
+    // Notify that auth state has changed
+    window.dispatchEvent(new Event("auth-state-changed"));
   };
 
   return {

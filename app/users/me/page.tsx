@@ -44,6 +44,8 @@ export default function ProfilePage() {
     try {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      // Notify that auth state has changed
+      window.dispatchEvent(new Event("auth-state-changed"));
     } catch (e) {}
     router.push("/");
   }
@@ -61,9 +63,8 @@ export default function ProfilePage() {
     { key: "updatedAt", label: "Mis à jour le" },
   ];
 
-  const visible = (user && typeof user === "object")
-    ? fields.filter(f => f.key in user)
-    : [];
+  const visible =
+    user && typeof user === "object" ? fields.filter((f) => f.key in user) : [];
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -74,7 +75,7 @@ export default function ProfilePage() {
             {visible.map(({ key, label }) => (
               <div key={key} className="flex flex-col">
                 <span className="text-sm text-muted-foreground">{label}</span>
-                <span className="text-base font-medium break-words">
+                <span className="text-base font-medium wrap-break-words">
                   {String((user as any)[key])}
                 </span>
               </div>

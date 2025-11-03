@@ -22,16 +22,34 @@ export function Header() {
   }, []);
 
   React.useEffect(() => {
-    try {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      setIsAuthed(!!token);
-      const onStorage = (e: StorageEvent) => {
-        if (e.key === "token") setIsAuthed(!!e.newValue);
-      };
-      window.addEventListener("storage", onStorage);
-      return () => window.removeEventListener("storage", onStorage);
-    } catch {}
+    // Check initial auth state
+    const checkAuth = () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        setIsAuthed(!!token);
+      } catch {}
+    };
+
+    checkAuth();
+
+    // Listen for auth changes in same tab (custom event)
+    const handleAuthChange = () => checkAuth();
+
+    // Listen for auth changes in other tabs (storage event)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "token") {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener("auth-state-changed", handleAuthChange);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("auth-state-changed", handleAuthChange);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   if (!mounted) {
@@ -54,13 +72,13 @@ export function Header() {
           </div>
 
           {/* Search Bar */}
-          <div className="flex flex-1 max-w-2xl items-center gap-2">
+          <div className="flex flex-1 max-w-2xl items-center">
             <div className="flex items-center gap-2">
               <select
                 aria-label="scope"
                 value={scope}
                 onChange={(e) => setScope(e.target.value as "rooms" | "events")}
-                className="rounded-md border px-2 py-1 bg-background text-sm"
+                className="rounded-l-md border border-r-0 px-2 py-1 bg-background text-sm h-9"
               >
                 <option value="rooms">Salles</option>
                 <option value="events">Événements</option>
@@ -83,14 +101,14 @@ export function Header() {
                   }
                   type="text"
                   placeholder="Rechercher événements ou salles"
-                  className="pr-28"
+                  className="pr-28 rounded-l-none shadow-none"
                 />
 
                 <button
                   type="button"
                   aria-label="clear search"
                   onClick={() => setQuery("")}
-                  className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center z-10"
+                  className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center z-10 ml-2"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -98,7 +116,7 @@ export function Header() {
                 <button
                   type="submit"
                   aria-label="submit search"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-primary px-3 py-1.5 flex items-center z-20"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-primary px-3 py-1.5 flex items-center z-20"
                 >
                   <Search className="h-4 w-4 text-white" />
                 </button>
@@ -115,9 +133,9 @@ export function Header() {
               title="Basculer thème clair / sombre"
             >
               {resolvedTheme === "dark" ? (
-                <Sun className="h-4 w-4 mr-2" />
+                <Sun className="h-4 w-4" />
               ) : (
-                <Moon className="h-4 w-4 mr-2" />
+                <Moon className="h-4 w-4" />
               )}
             </Button>
             <Button variant="ghost" size="sm">

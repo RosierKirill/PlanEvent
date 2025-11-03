@@ -45,6 +45,8 @@ export default function LoginForm() {
       try {
         if (token) localStorage.setItem("token", token);
         if (user) localStorage.setItem("user", JSON.stringify(user));
+        // Notify that auth state has changed
+        window.dispatchEvent(new Event("auth-state-changed"));
       } catch (e) {}
 
       router.push("/");
