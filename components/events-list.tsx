@@ -1,5 +1,5 @@
 "use client";
-import { useAuthToken } from "@/hooks/use-auth-token";
+import { useAuthToken } from "@/hooks/use-auth";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 
@@ -71,7 +71,10 @@ export default function EventsList() {
             const desc = String(ev.description || "").toLowerCase();
             const loc = String(ev.location || "").toLowerCase();
             const tags = Array.isArray(ev.tags)
-              ? ev.tags.map((t: any) => String(t)).join(" ").toLowerCase()
+              ? ev.tags
+                  .map((t: any) => String(t))
+                  .join(" ")
+                  .toLowerCase()
               : "";
             return (
               title.includes(needle) ||

@@ -11,7 +11,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Users } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2, LogIn, Plus, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Room {
@@ -43,6 +45,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { token, isAuthenticated } = useAuth();
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -64,8 +67,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
   const createRoom = async () => {
     if (!newRoomName.trim()) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!isAuthenticated || !token) {
       setError("Vous devez être connecté pour créer un groupe");
       return;
     }
@@ -128,27 +130,41 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nom du groupe"
-                  value={newRoomName}
-                  onChange={(e) => setNewRoomName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") createRoom();
-                  }}
-                  disabled={creating}
-                />
-                <Button
-                  onClick={createRoom}
-                  disabled={creating || !newRoomName.trim()}
-                >
-                  {creating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Créer"
-                  )}
-                </Button>
-              </div>
+              {!isAuthenticated ? (
+                <div className="text-center py-4 space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Vous devez être connecté pour créer un groupe
+                  </p>
+                  <Button asChild variant="default" size="sm">
+                    <Link href="/login">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Se connecter
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nom du groupe"
+                    value={newRoomName}
+                    onChange={(e) => setNewRoomName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") createRoom();
+                    }}
+                    disabled={creating}
+                  />
+                  <Button
+                    onClick={createRoom}
+                    disabled={creating || !newRoomName.trim()}
+                  >
+                    {creating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Créer"
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
