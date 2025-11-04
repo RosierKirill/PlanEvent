@@ -9,13 +9,18 @@ interface RoomCardProps {
     name?: string;
     user_id: string;
     event_id: string;
+    // Optional display fields that may come from API
+    location?: string | null;
+    members?: number | null;
+    description?: string | null;
+    image?: string | null;
+    rating?: number | null;
   };
 }
 
 export function RoomCard({ room }: RoomCardProps) {
   const title = room.name || "Salle sans titre";
   const locationText = room.location || "Lieu inconnu";
-  const rating = typeof room.rating === "number" ? room.rating : 0;
   const members = typeof room.members === "number" ? room.members : 0;
   const description = room.description || "";
   const image = room.image || "/placeholder.svg";
@@ -45,11 +50,6 @@ export function RoomCard({ room }: RoomCardProps) {
               <span className="text-sm text-muted-foreground">
                 {locationText}
               </span>
-              <span className="text-sm">•</span>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium">{rating}</span>
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              </div>
             </div>
             <h3 className="text-lg font-semibold mb-2">{title}</h3>
             {description ? (

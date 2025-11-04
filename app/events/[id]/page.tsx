@@ -12,6 +12,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminEventControls } from "@/components/admin-event-controls";
 
 async function fetchEvent(id: string) {
   const base = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE || "";
@@ -38,12 +39,15 @@ export default async function EventPage({ params }: Props) {
   return (
     <main className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/events">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux événements
-          </Link>
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/events">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour aux événements
+            </Link>
+          </Button>
+          <AdminEventControls eventId={id} />
+        </div>
       </div>
 
       <h2 className="text-2xl font-bold leading-relaxed text-muted-foreground p-2">
@@ -85,7 +89,7 @@ export default async function EventPage({ params }: Props) {
                 <Users className="h-4 w-4" />
                 Participants
               </CardDescription>
-              <CardTitle className="text-3xl">{event.attendees ?? 0}</CardTitle>
+              <CardTitle className="text-3xl">{event.total_participants ?? event.attendees ?? 0}</CardTitle>
             </CardHeader>
             <CardContent>
               <ParticipateButton eventId={id} />

@@ -1,10 +1,12 @@
 import { EventTagFilter } from "@/components/event-tag-filter";
 import EventsList from "@/components/events-list";
+import { AdminCreateEventButton } from "@/components/admin-create-event-button";
 import * as React from "react";
 
 export default function EventsPage() {
   return (
     <main className="container mx-auto px-4 py-8">
+      <AdminCreateEventButton />
       <React.Suspense fallback={<div>Chargement...</div>}>
         <EventTagFilter />
       </React.Suspense>

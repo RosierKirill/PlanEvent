@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-const BASE = process.env.API_BASE || "";
+const RAW_BASE = (process.env.API_BASE || "").trim();
 
 export async function GET(req: Request) {
   try {
-    const url = `${String(BASE).replace(/\/$/, "")}/events${
+    const url = `${String(RAW_BASE).replace(/\/$/, "")}/events${
       new URL(req.url).search
     }`;
     const auth =
@@ -30,7 +30,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const url = `${String(BASE).replace(/\/$/, "")}/events`;
+    const base = String(RAW_BASE).replace(/\/$/, "");
+    if (!base) {
+      return NextResponse.json(
+        { error: "API_BASE non configuré côté serveur" },
+        { status: 501 }
+      );
+    }
+    const url = `${base}/events`;
     const body = await req.text();
     const auth =
       req.headers.get("authorization") || req.headers.get("Authorization");
