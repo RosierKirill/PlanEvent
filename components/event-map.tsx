@@ -6,6 +6,7 @@ import type { LatLngExpression } from "leaflet";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { MapSkeleton } from "./map-skeleton";
+import { MapBoundsAdjuster } from "./map-bounds-adjuster";
 
 // Import dynamique consolidé avec skeleton
 const MapContainer = dynamic(
@@ -174,6 +175,12 @@ export function EventMap() {
       ? [events[0].latitude, events[0].longitude]
       : center;
 
+  // Créer un tableau de positions pour le MapBoundsAdjuster
+  const eventPositions: LatLngExpression[] = events.map((event) => [
+    event.latitude,
+    event.longitude,
+  ]);
+
   return (
     <div
       className="w-full h-[600px] rounded-lg overflow-hidden border relative"
@@ -184,6 +191,12 @@ export function EventMap() {
         zoom={events.length > 0 ? 12 : 11}
         style={{ height: "100%", width: "100%", zIndex: 0 }}
         scrollWheelZoom={true}
+        maxBounds={[
+          [-90, -180],
+          [90, 180],
+        ]}
+        maxBoundsViscosity={1.0}
+        minZoom={2}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -191,7 +204,9 @@ export function EventMap() {
           maxZoom={19}
           updateWhenZooming={false}
           keepBuffer={2}
+          noWrap={true}
         />
+        <MapBoundsAdjuster positions={eventPositions} />
         {events.map((event) => {
           if (!event.latitude || !event.longitude) return null;
 

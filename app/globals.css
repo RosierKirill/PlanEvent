@@ -198,3 +198,8 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Cacher l'attribution Leaflet */
+.leaflet-control-attribution {
+  display: none !important;
+}

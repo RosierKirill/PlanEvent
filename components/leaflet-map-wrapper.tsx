@@ -6,10 +6,10 @@
  */
 
 import type { LatLngExpression, Map as LeafletMap } from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 
 // Types exportés
 export type { LatLngExpression, LeafletMap };
 
-// Composants exportés
-export { MapContainer, Marker, Popup, TileLayer };
+// Composants et hooks exportés
+export { MapContainer, Marker, Popup, TileLayer, useMap };
