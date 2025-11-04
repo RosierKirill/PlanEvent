@@ -1,3 +1,4 @@
+import { EventMiniMap } from "@/components/event-mini-map";
 import { ParticipateButton } from "@/components/participate-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,18 @@ export default async function EventPage({ params }: Props) {
               priority
             />
           </div>
+          {event.tags && Array.isArray(event.tags) && event.tags.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {event.tags.map((tag: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-s font-medium bg-primary/10 text-primary border border-primary/20"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {/* Sidebar */}
@@ -109,6 +122,10 @@ export default async function EventPage({ params }: Props) {
                   </p>
                 </div>
               </div>
+
+              {/* Mini carte de localisation */}
+              <EventMiniMap location={event.location} name={event.name} />
+
               {event.time && (
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -124,18 +141,6 @@ export default async function EventPage({ params }: Props) {
           </Card>
         </aside>
       </div>
-      {event.tags && Array.isArray(event.tags) && event.tags.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {event.tags.map((tag: string, idx: number) => (
-            <span
-              key={idx}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      ) : null}
     </main>
   );
 }
