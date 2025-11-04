@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Plan'Event",
   description:
-    "Application de coordination de salles pour événements. Découvrez des événements, créez des salles de discussion et organisez vos sorties en salle.",
+    "Application de coordination de groupe pour événements. Découvrez des événements, créez des groupes de discussion et organisez vos sorties en salle.",
 };
 
 export default function RootLayout({

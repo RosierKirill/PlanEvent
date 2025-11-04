@@ -80,7 +80,7 @@ export function Header() {
                 onChange={(e) => setScope(e.target.value as "rooms" | "events")}
                 className="rounded-l-md border border-r-0 px-2 py-1 bg-background text-sm h-9"
               >
-                <option value="rooms">Salles</option>
+                <option value="rooms">Groupes</option>
                 <option value="events">Événements</option>
               </select>
             </div>
@@ -100,7 +100,7 @@ export function Header() {
                     setQuery((e.target as HTMLInputElement).value)
                   }
                   type="text"
-                  placeholder="Rechercher événements ou salles"
+                  placeholder="Rechercher événements ou groupes..."
                   className="pr-28 rounded-l-none shadow-none"
                 />
 

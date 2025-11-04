@@ -19,19 +19,18 @@ export async function GET(req: NextRequest) {
       headers["authorization"] = auth;
     }
 
-    let url = `${String(BASE).replace(/\/$/, "")}/users?page=${page}&limit=${limit}`;
+    let url = `${String(BASE).replace(
+      /\/$/,
+      ""
+    )}/users?page=${page}&limit=${limit}`;
     if (search) {
       url += `&search=${encodeURIComponent(search)}`;
     }
-
-    console.log("GET /api/users - URL:", url);
 
     const response = await fetch(url, {
       method: "GET",
       headers,
     });
-
-    console.log("GET /api/users - Status:", response.status);
 
     if (!response.ok) {
       const text = await response.text();
@@ -45,11 +44,8 @@ export async function GET(req: NextRequest) {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
-      console.log("GET /api/users - Response:", data);
       return NextResponse.json(data, { status: 200 });
     } else {
-      const text = await response.text();
-      console.log("GET /api/users - Non-JSON response:", text);
       return NextResponse.json(
         { error: "Invalid response format" },
         { status: 500 }

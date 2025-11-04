@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { MapPin } from "lucide-react";
 import Link from "next/link";
 
 interface RoomCardProps {
@@ -8,13 +9,15 @@ interface RoomCardProps {
     id: string;
     name?: string;
     user_id: string;
-    event_id: string;
+    events: {
+      id: string;
+      name: string;
+      location?: string | null;
+      date?: string | null;
+    };
     // Optional display fields that may come from API
-    location?: string | null;
-    members?: number | null;
+    room_members?: Array<object>;
     description?: string | null;
-    image?: string | null;
-    rating?: number | null;
     isMember?: boolean | null;
   };
   onJoin?: (roomId: string) => void;
@@ -24,54 +27,33 @@ interface RoomCardProps {
 
 export function RoomCard({ room, onJoin, onLeave, joiningId }: RoomCardProps) {
   const title = room.name || "Salle sans titre";
-  const locationText = room.location || "Lieu inconnu";
-  const members = typeof room.members === "number" ? room.members : 0;
+  const eventName = room.events.name || "Aucun événement";
+  const members = room.room_members?.length ?? 0;
   const description = room.description || "";
-  const image = room.image || "/placeholder.svg";
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="flex gap-4 p-4">
-        {/* Image */}
-        <div className="shrink-0">
-          <Link href={`/rooms/${room.id}`}>
-            <img
-              src={image}
-              alt={title}
-              className="h-32 w-44 rounded-lg object-cover"
-              onError={(e) => {
-                const target = e.currentTarget as HTMLImageElement;
-                if (target.src !== location.origin + "/placeholder.svg") {
-                  target.src = "/placeholder.svg";
-                }
-              }}
-            />
-          </Link>
-        </div>
-
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow p-1">
+      <div className="flex gap-4 p-0 px-2">
         {/* Content */}
-        <div className="flex flex-1 flex-col justify-between bg-accent/50 rounded-lg p-4">
+        <div className="flex flex-1 flex-col justify-between rounded-lg p-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-muted-foreground">
-                {locationText}
-              </span>
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{eventName}</span>
             </div>
             <h3 className="text-lg font-semibold mb-2">
               <Link href={`/rooms/${room.id}`} className="hover:underline">
                 {title}
               </Link>
             </h3>
-            {description ? (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {description}
-              </p>
-            ) : null}
+            <p className="text-sm text-muted-foreground line-clamp-2 h-4">
+              {description}
+            </p>
           </div>
 
           {/* Members */}
           <div className="flex items-center justify-between gap-2 mt-4">
-            <span className="text-sm font-medium">{members} membres</span>
+            <span className="text-sm font-medium">{members} membre(s)</span>
             {/* Actions: join if not member; else access/leave */}
             <div className="flex items-center gap-2">
               {room.isMember ? (

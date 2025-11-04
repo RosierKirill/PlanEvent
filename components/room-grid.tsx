@@ -1,11 +1,11 @@
 "use client";
 import { RoomCard } from "@/components/room-card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { LogIn } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { LogIn } from "lucide-react";
 
 export function RoomGrid() {
   const [rooms, setRooms] = React.useState<any[]>([]);
@@ -54,7 +54,7 @@ export function RoomGrid() {
         }
 
         if (!Array.isArray(list)) {
-          throw new Error("Format de réponse inattendu pour les salles");
+          throw new Error("Format de réponse inattendu pour les groupes");
         }
 
         if (isAuthenticated && token && user?.id) {
@@ -111,7 +111,9 @@ export function RoomGrid() {
         body: JSON.stringify({ room_id: roomId, user_id: user.id }),
       });
       if (!res.ok) throw new Error(await res.text());
-      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, isMember: true } : r)));
+      setRooms((prev) =>
+        prev.map((r) => (r.id === roomId ? { ...r, isMember: true } : r))
+      );
     } catch (e: any) {
       setError(e?.message || "Erreur lors de la jonction au groupe");
     } finally {
@@ -131,7 +133,9 @@ export function RoomGrid() {
         headers: { authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(await res.text());
-      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, isMember: false } : r)));
+      setRooms((prev) =>
+        prev.map((r) => (r.id === roomId ? { ...r, isMember: false } : r))
+      );
     } catch (e: any) {
       setError(e?.message || "Erreur lors de la sortie du groupe");
     } finally {
@@ -139,9 +143,13 @@ export function RoomGrid() {
     }
   };
 
-  if (loading) return <div>Chargement des salles...</div>;
+  if (loading) return <div>Chargement des groupes...</div>;
   if (error) return <div className="text-red-500">Erreur : {error}</div>;
   if (rooms.length === 0) return <div>Aucune salle trouvée.</div>;
+
+  // Séparer les groupes en deux catégories
+  const myRooms = rooms.filter((room) => room.isMember === true);
+  const otherRooms = rooms.filter((room) => !room.isMember);
 
   return (
     <>
@@ -157,16 +165,42 @@ export function RoomGrid() {
           </Button>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {rooms.map((room) => (
-          <RoomCard
-            key={room.id}
-            room={room}
-            onJoin={onJoin}
-            onLeave={onLeave}
-            joiningId={joiningId}
-          />
-        ))}
+      <div className="space-y-8">
+        {/* Mes Groupes */}
+        {myRooms.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Mes Groupes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myRooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  room={room}
+                  onJoin={onJoin}
+                  onLeave={onLeave}
+                  joiningId={joiningId}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Autres Groupes */}
+        {otherRooms.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Autres Groupes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {otherRooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  room={room}
+                  onJoin={onJoin}
+                  onLeave={onLeave}
+                  joiningId={joiningId}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
