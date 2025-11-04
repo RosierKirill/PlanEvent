@@ -118,7 +118,7 @@ export default function EventsList() {
           <a
             key={ev.id}
             href={`/events/${ev.id}`}
-            className="flex overflow-hidden border rounded-xl bg-card hover:shadow-lg transition-shadow"
+            className="flex overflow-hidden border rounded-xl bg-card hover:shadow-xl hover:scale-[1.02] hover:border-primary/50 transition-all duration-300 ease-out"
           >
             <div className="shrink-0 w-40 h-full relative bg-muted">
               <img

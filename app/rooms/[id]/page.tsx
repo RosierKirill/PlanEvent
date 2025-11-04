@@ -227,7 +227,7 @@ export default function RoomPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/rooms`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux salles
+              Retour aux groupes
             </Link>
           </Button>
         </div>
@@ -251,7 +251,7 @@ export default function RoomPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/rooms`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux salles
+            Retour aux groupes
           </Link>
         </Button>
       </div>
