@@ -1,5 +1,6 @@
 "use client";
 
+import { RealtimeChat } from "@/components/realtime-chat";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RealtimeChat } from "@/components/realtime-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Calendar, Loader2, MapPin, Users } from "lucide-react";
 import Link from "next/link";
@@ -263,72 +263,22 @@ export default function RoomPage() {
               <CardTitle className="text-3xl">{room.name}</CardTitle>
               <CardDescription>{room.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none">
-                <p className="text-muted-foreground">
-                  Bienvenue dans le groupe {room.name}! Utilisez cet espace pour
-                  coordonner votre sortie.
-                </p>
-              </div>
-            </CardContent>
           </Card>
 
-          {/* Real-time Chat */}
-          <div className="h-[600px]">
-            <RealtimeChat
-              roomName={`room-${roomId}`}
-              username={user?.name || user?.username || user?.email || "Anonyme"}
-            />
-          </div>
-
-          {event && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Événement associé</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div>
-                      <p className="font-medium">{event.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground mt-1" />
-                    <div>
-                      <p className="text-sm font-medium">Date</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(event.start_date).toLocaleString("fr-FR", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
-                    <div>
-                      <p className="text-sm font-medium">Lieu</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.location}
-                      </p>
-                    </div>
-                  </div>
-                  <Button asChild variant="outline" size="sm" className="mt-4">
-                    <Link href={`/events/${event.id}`}>
-                      Voir l'événement complet
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="py-0">
+            {/* Real-time Chat */}
+            <div className="h-[600px]">
+              <RealtimeChat
+                roomName={`room-${roomId}`}
+                username={
+                  user?.name || user?.username || user?.email || "Anonyme"
+                }
+                userId={user?.id}
+                roomId={roomId}
+                token={token || ""}
+              />
+            </div>
+          </Card>
         </div>
 
         <aside className="lg:col-span-1 space-y-6">
@@ -394,6 +344,54 @@ export default function RoomPage() {
               )}
             </CardContent>
           </Card>
+          {event && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Événement associé</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div>
+                      <p className="font-medium">{event.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm font-medium">Date</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(event.start_date).toLocaleString("fr-FR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm font-medium">Lieu</p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.location}
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" size="sm" className="mt-4">
+                    <Link href={`/events/${event.id}`}>
+                      Voir l'événement complet
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </aside>
       </div>
     </main>

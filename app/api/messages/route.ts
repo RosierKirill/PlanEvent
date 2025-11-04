@@ -1,0 +1,62 @@
+import { NextResponse } from "next/server";
+
+const BASE = process.env.API_BASE || "";
+
+// GET /api/messages?room_id=xxx - Retrieve messages for a room
+export async function GET(request: Request) {
+  try {
+    const url = `${String(BASE).replace(/\/$/, "")}/messages${
+      new URL(request.url).search
+    }`;
+    const auth =
+      request.headers.get("authorization") ||
+      request.headers.get("Authorization");
+    const headers: Record<string, string> = { accept: "application/json" };
+    if (auth) headers["authorization"] = auth;
+    const res = await fetch(url, { headers });
+    const text = await res.text();
+    const contentType = res.headers.get("content-type") || "text/plain";
+    return new Response(text, {
+      status: res.status,
+      headers: { "content-type": contentType },
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: String(err.message || err) },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/messages - Create a new message
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const url = `${String(BASE).replace(/\/$/, "")}/messages`;
+    const auth =
+      request.headers.get("authorization") ||
+      request.headers.get("Authorization");
+    const headers: Record<string, string> = {
+      accept: "application/json",
+      "content-type": "application/json",
+    };
+    if (auth) headers["authorization"] = auth;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    const contentType = res.headers.get("content-type") || "text/plain";
+    return new Response(text, {
+      status: res.status,
+      headers: { "content-type": contentType },
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: String(err.message || err) },
+      { status: 500 }
+    );
+  }
+}
