@@ -1,21 +1,23 @@
 "use client";
 
+import { getCachedCoordinates } from "@/lib/geocoding-service";
+import { initializeLeaflet } from "@/lib/leaflet-setup";
 import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
 import dynamic from "next/dynamic";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { MiniMapSkeleton } from "./map-skeleton";
 
-// Dynamically import map components to avoid SSR issues
+// Imports dynamiques consolidés avec skeleton
 const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
+  () => import("./leaflet-map-wrapper").then((mod) => mod.MapContainer),
+  { ssr: false, loading: () => <MiniMapSkeleton /> }
 );
 const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  () => import("./leaflet-map-wrapper").then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
+  () => import("./leaflet-map-wrapper").then((mod) => mod.Marker),
   { ssr: false }
 );
 
@@ -24,57 +26,17 @@ interface EventMiniMapProps {
   name: string;
 }
 
-// Geocode an address using Nominatim (OpenStreetMap)
-async function geocodeAddress(
-  address: string
-): Promise<{ lat: number; lon: number } | null> {
-  try {
-    const searchQuery = address.includes("France")
-      ? address
-      : `${address}, France`;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      searchQuery
-    )}&limit=1`;
-
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "PlanEvent/1.0",
-      },
-    });
-
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon),
-      };
-    }
-  } catch (error) {
-    console.error(`Failed to geocode address: ${address}`, error);
-  }
-  return null;
-}
-
 export function EventMiniMap({ location, name }: EventMiniMapProps) {
-  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Fix for default marker icon in Leaflet
+    // Initialiser Leaflet une seule fois
     if (typeof window !== "undefined") {
-      import("leaflet").then((L) => {
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-          iconUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-        });
+      initializeLeaflet().then(() => {
         setIsMounted(true);
       });
     }
@@ -87,7 +49,12 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
         return;
       }
 
-      const result = await geocodeAddress(location);
+      // Ajouter "France" pour améliorer la précision
+      const searchQuery = location.includes("France")
+        ? location
+        : `${location}, France`;
+
+      const result = await getCachedCoordinates(searchQuery);
       setCoords(result);
       setLoading(false);
     };
@@ -96,11 +63,7 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
   }, [location]);
 
   if (loading || !isMounted) {
-    return (
-      <div className="flex items-center justify-center h-[250px] bg-muted/20 rounded-lg">
-        <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
-      </div>
-    );
+    return <MiniMapSkeleton />;
   }
 
   if (!coords) {
@@ -113,10 +76,13 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
     );
   }
 
-  const position: LatLngExpression = [coords.lat, coords.lon];
+  const position: LatLngExpression = [coords.lat, coords.lng];
 
   return (
-    <div className="w-full h-[250px] rounded-lg overflow-hidden border relative" style={{ zIndex: 0 }}>
+    <div
+      className="w-full h-[250px] rounded-lg overflow-hidden border relative"
+      style={{ zIndex: 0 }}
+    >
       <MapContainer
         center={position}
         zoom={13}
@@ -130,6 +96,9 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+          updateWhenZooming={false}
+          keepBuffer={2}
         />
         <Marker position={position} />
       </MapContainer>
