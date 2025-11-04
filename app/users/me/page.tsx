@@ -9,7 +9,12 @@ export default function ProfilePage() {
   const [error, setError] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  const [form, setForm] = React.useState<{ name?: string; email?: string }>({});
+  const [form, setForm] = React.useState<{
+    name?: string;
+    email?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }>({});
   const router = useRouter();
 
   React.useEffect(() => {
@@ -78,17 +83,59 @@ export default function ProfilePage() {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const headers: Record<string, string> = { "content-type": "application/json" };
       if (token) headers["authorization"] = `Bearer ${token}`;
-      const res = await fetch("/api/users/me", {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify(form),
-      });
-      const text = await res.text();
-      const ct = res.headers.get("content-type") || "";
-      const data = ct.includes("application/json") ? JSON.parse(text || "{}") : { raw: text };
-      if (!res.ok) throw new Error(data?.error || data?.message || data?.raw || `Erreur ${res.status}`);
-      setUser((prev: any) => ({ ...(prev || {}), ...(data || {}) }));
+      // Validate password fields if provided
+      if (form.newPassword || form.currentPassword) {
+        const current = form.currentPassword?.trim() || "";
+        const pwd = form.newPassword?.trim() || "";
+        if (!current || !pwd) throw new Error("Ancien et nouveau mot de passe requis");
+        if (pwd.length < 6) throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+      }
+
+      // 1) Update profile (name/email) if provided
+      const profilePayload: any = {
+        name: form.name,
+        email: form.email,
+      };
+      let mergedUser: any = null;
+      if (profilePayload.name !== undefined || profilePayload.email !== undefined) {
+        const resProfile = await fetch("/api/users/me", {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify(profilePayload),
+        });
+        const textP = await resProfile.text();
+        const ctP = resProfile.headers.get("content-type") || "";
+        const dataP = ctP.includes("application/json") ? JSON.parse(textP || "{}") : { raw: textP };
+        if (!resProfile.ok) {
+          throw new Error(dataP?.error || dataP?.message || dataP?.raw || `Erreur ${resProfile.status}`);
+        }
+        mergedUser = dataP;
+      }
+
+      // 2) Update password if provided (via /api/users/me/password)
+      if (form.newPassword && form.newPassword.trim()) {
+        const current = form.currentPassword?.trim() || "";
+        const pwd = form.newPassword.trim();
+        // Backend expects camelCase keys per Swagger
+        const passwordPayload: any = { currentPassword: current, newPassword: pwd };
+        const resPwd = await fetch("/api/users/me/password", {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify(passwordPayload),
+        });
+        const textW = await resPwd.text();
+        const ctW = resPwd.headers.get("content-type") || "";
+        const dataW = ctW.includes("application/json") ? JSON.parse(textW || "{}") : { raw: textW };
+        if (!resPwd.ok) {
+          throw new Error(dataW?.error || dataW?.message || dataW?.raw || `Erreur ${resPwd.status}`);
+        }
+      }
+
+      if (mergedUser && typeof mergedUser === "object") {
+        setUser((prev: any) => ({ ...(prev || {}), ...(mergedUser || {}) }));
+      }
       setEditing(false);
+      setForm((f) => ({ ...f, currentPassword: "", newPassword: "" }));
     } catch (err: any) {
       setError(err?.message || "Impossible d'enregistrer le profil");
     } finally {
@@ -155,6 +202,31 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
+            {/* Password change (two fields only) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="text-sm text-muted-foreground">Ancien mot de passe</label>
+                <input
+                  type="password"
+                  value={form.currentPassword ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  placeholder="Requis pour changer le mot de passe"
+                  className="mt-1 px-3 py-2 border rounded-md bg-background"
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm text-muted-foreground">Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={form.newPassword ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
+                  placeholder="Laisser vide pour ne pas changer"
+                  className="mt-1 px-3 py-2 border rounded-md bg-background"
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
             <div className="pt-2 flex gap-3">
               <button
                 type="button"
@@ -163,6 +235,8 @@ export default function ProfilePage() {
                   setForm({
                     name: (user as any)?.name ?? "",
                     email: (user as any)?.email ?? "",
+                    currentPassword: "",
+                    newPassword: "",
                   });
                 }}
                 className="px-4 py-2 rounded-md border hover:bg-accent"
