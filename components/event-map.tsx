@@ -1,26 +1,29 @@
 "use client";
 
+import { getCachedCoordinates } from "@/lib/geocoding-service";
+import { initializeLeaflet } from "@/lib/leaflet-setup";
 import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
 import dynamic from "next/dynamic";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { MapSkeleton } from "./map-skeleton";
 
-// Dynamically import map components to avoid SSR issues
+// Import dynamique consolidé avec skeleton
 const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
+  () => import("./leaflet-map-wrapper").then((mod) => mod.MapContainer),
+  { ssr: false, loading: () => <MapSkeleton /> }
 );
 const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  () => import("./leaflet-map-wrapper").then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
+  () => import("./leaflet-map-wrapper").then((mod) => mod.Marker),
   { ssr: false }
 );
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
-  ssr: false,
-});
+const Popup = dynamic(
+  () => import("./leaflet-map-wrapper").then((mod) => mod.Popup),
+  { ssr: false }
+);
 
 interface Event {
   id: string;
@@ -39,38 +42,6 @@ interface EventWithCoords extends Event {
   longitude: number;
 }
 
-// Geocode an address using Nominatim (OpenStreetMap)
-async function geocodeAddress(
-  address: string
-): Promise<{ lat: number; lon: number } | null> {
-  try {
-    // Add "France" to improve geocoding accuracy
-    const searchQuery = address.includes("France")
-      ? address
-      : `${address}, France`;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      searchQuery
-    )}&limit=1`;
-
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "PlanEvent/1.0", // Required by Nominatim
-      },
-    });
-
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon),
-      };
-    }
-  } catch (error) {
-    console.error(`Failed to geocode address: ${address}`, error);
-  }
-  return null;
-}
-
 export function EventMap() {
   const [events, setEvents] = useState<EventWithCoords[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,18 +49,9 @@ export function EventMap() {
   const [geocodingProgress, setGeocodingProgress] = useState<string>("");
 
   useEffect(() => {
-    // Fix for default marker icon in Leaflet
+    // Initialiser Leaflet une seule fois
     if (typeof window !== "undefined") {
-      import("leaflet").then((L) => {
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-          iconUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-        });
+      initializeLeaflet().then(() => {
         setIsMounted(true);
       });
     }
@@ -127,35 +89,43 @@ export function EventMap() {
             }
           }
 
-          // Geocode events that have location but no coordinates
+          // Géocodage optimisé avec cache
           const geocodedEvents: EventWithCoords[] = [];
 
           for (let i = 0; i < eventList.length; i++) {
             const event = eventList[i];
 
-            // If event already has coordinates, use them
+            // Si l'événement a déjà des coordonnées, les utiliser
             if (event.latitude && event.longitude) {
               geocodedEvents.push(event as EventWithCoords);
             }
-            // If event has a location string, geocode it
+            // Si l'événement a une localisation, la géocoder avec cache
             else if (event.location && typeof event.location === "string") {
               setGeocodingProgress(
                 `Géocodage ${i + 1}/${eventList.length}: ${event.name}`
               );
 
-              const coords = await geocodeAddress(event.location);
+              // Ajouter "France" pour améliorer la précision du géocodage
+              const searchQuery = event.location.includes("France")
+                ? event.location
+                : `${event.location}, France`;
+
+              const coords = await getCachedCoordinates(searchQuery);
+
               if (coords) {
                 geocodedEvents.push({
                   ...event,
                   latitude: coords.lat,
-                  longitude: coords.lon,
+                  longitude: coords.lng,
                 });
               } else {
                 console.warn(
                   `✗ Failed to geocode "${event.name}" at "${event.location}"`
                 );
               }
-              // Add a small delay to respect Nominatim's usage policy (max 1 request per second)
+
+              // Délai uniquement si ce n'est pas du cache (respecter Nominatim rate limit)
+              // Le service de cache gère déjà le rate limiting
               await new Promise((resolve) => setTimeout(resolve, 1100));
             }
           }
@@ -176,6 +146,7 @@ export function EventMap() {
   if (loading || !isMounted) {
     return (
       <div className="flex flex-col items-center justify-center h-[600px] bg-muted/20 rounded-lg gap-4">
+        <div className="mx-auto w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
         <p className="text-muted-foreground">Chargement de la carte...</p>
         {geocodingProgress && (
           <p className="text-sm text-muted-foreground">{geocodingProgress}</p>
@@ -194,17 +165,20 @@ export function EventMap() {
     );
   }
 
-  // Default center: Lyon, France
+  // Centre par défaut: Lyon, France
   const center: LatLngExpression = [45.75, 4.85];
 
-  // If we have events with coordinates, center on the first one or calculate average
+  // Si on a des événements avec coordonnées, centrer sur le premier
   const mapCenter: LatLngExpression =
     events.length > 0 && events[0].latitude && events[0].longitude
       ? [events[0].latitude, events[0].longitude]
       : center;
 
   return (
-    <div className="w-full h-[600px] rounded-lg overflow-hidden border relative" style={{ zIndex: 0 }}>
+    <div
+      className="w-full h-[600px] rounded-lg overflow-hidden border relative"
+      style={{ zIndex: 0 }}
+    >
       <MapContainer
         center={mapCenter}
         zoom={events.length > 0 ? 12 : 11}
@@ -214,6 +188,9 @@ export function EventMap() {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+          updateWhenZooming={false}
+          keepBuffer={2}
         />
         {events.map((event) => {
           if (!event.latitude || !event.longitude) return null;

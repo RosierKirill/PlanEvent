@@ -1,5 +1,6 @@
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
+import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
