@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RealtimeChat } from "@/components/realtime-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Calendar, Loader2, MapPin, Users } from "lucide-react";
 import Link from "next/link";
@@ -271,6 +272,14 @@ export default function RoomPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Real-time Chat */}
+          <div className="h-[600px]">
+            <RealtimeChat
+              roomName={`room-${roomId}`}
+              username={user?.name || user?.username || user?.email || "Anonyme"}
+            />
+          </div>
 
           {event && (
             <Card>
