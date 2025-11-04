@@ -7,8 +7,6 @@ export async function POST(req: NextRequest) {
     const auth = req.headers.get("authorization");
     const body = await req.json();
 
-    console.log("POST /api/room-members - Body:", body);
-
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       accept: "application/json",
@@ -19,15 +17,12 @@ export async function POST(req: NextRequest) {
     }
 
     const url = `${String(BASE).replace(/\/$/, "")}/room-members`;
-    console.log("POST /api/room-members - URL:", url);
 
     const response = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
     });
-
-    console.log("POST /api/room-members - Status:", response.status);
 
     const contentType = response.headers.get("content-type");
     let data;
@@ -37,8 +32,6 @@ export async function POST(req: NextRequest) {
     } else {
       data = await response.text();
     }
-
-    console.log("POST /api/room-members - Response:", data);
 
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {

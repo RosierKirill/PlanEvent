@@ -65,7 +65,7 @@ export function Navigation() {
               }`}
             >
               <Users className="h-4 w-4" />
-              Salles
+              Groupes
             </Button>
           </Link>
         </div>
