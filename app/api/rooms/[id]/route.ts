@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BASE = process.env.API_BASE || "";
+const RAW_BASE = (process.env.API_BASE || "").trim();
 
 export async function GET(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function GET(
       headers["authorization"] = auth;
     }
 
-    const url = `${String(BASE).replace(/\/$/, "")}/rooms/${encodeURIComponent(id)}`;
+    const url = `${String(RAW_BASE).replace(/\/$/, "")}/rooms/${encodeURIComponent(id)}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -42,5 +42,63 @@ export async function GET(
       { error: error.message || "Erreur serveur" },
       { status: 500 }
     );
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: any }) {
+  try {
+    const resolved = await params;
+    const id = resolved.id;
+    const base = String(RAW_BASE).replace(/\/$/, "");
+    if (!base) return NextResponse.json({ error: "API_BASE manquant" }, { status: 501 });
+
+    const auth = req.headers.get("authorization");
+    const headers: Record<string, string> = {
+      "content-type": req.headers.get("content-type") || "application/json",
+    };
+    if (auth) headers["authorization"] = auth;
+    const body = await req.text();
+
+    let res = await fetch(`${base}/rooms/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers,
+      body,
+    });
+    if (res.status === 404 || res.status === 405) {
+      const retry = await fetch(`${base}/rooms/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers,
+        body,
+      });
+      if (retry.status !== 404) res = retry;
+    }
+    const text = await res.text();
+    const ct = res.headers.get("content-type") || "text/plain";
+    return new Response(text, { status: res.status, headers: { "content-type": ct } });
+  } catch (error: any) {
+    return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: any }) {
+  try {
+    const resolved = await params;
+    const id = resolved.id;
+    const base = String(RAW_BASE).replace(/\/$/, "");
+    if (!base) return NextResponse.json({ error: "API_BASE manquant" }, { status: 501 });
+
+    const auth = req.headers.get("authorization");
+    const headers: Record<string, string> = {};
+    if (auth) headers["authorization"] = auth;
+
+    const res = await fetch(`${base}/rooms/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+    });
+    const text = await res.text();
+    const ct = res.headers.get("content-type") || "text/plain";
+    return new Response(text, { status: res.status, headers: { "content-type": ct } });
+  } catch (error: any) {
+    return NextResponse.json({ error: String(error?.message || error) }, { status: 500 });
   }
 }

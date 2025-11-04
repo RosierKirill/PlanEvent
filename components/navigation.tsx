@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar, Home, Map, Users } from "lucide-react";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +12,8 @@ export function Navigation() {
   const isEvents = pathname?.startsWith("/events");
   const isMap = pathname?.startsWith("/map");
   const isRooms = pathname?.startsWith("/rooms");
+  const isUsers = pathname?.startsWith("/users") && !pathname?.startsWith("/users/me");
+  const isAdmin = useIsAdmin();
 
   return (
     <nav className="border-b bg-background">
@@ -67,9 +70,22 @@ export function Navigation() {
               <Users className="h-4 w-4" />
               Groupes
             </Button>
+        </Link>
+        {isAdmin && (
+          <Link href="/users">
+            <Button
+              variant="ghost"
+              className={`gap-2 rounded-none border-b-2 ${
+                isUsers ? "border-primary" : "border-transparent hover:border-primary"
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Utilisateurs
+            </Button>
           </Link>
-        </div>
+        )}
       </div>
-    </nav>
+    </div>
+  </nav>
   );
 }
