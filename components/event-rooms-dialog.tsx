@@ -20,7 +20,9 @@ interface Room {
   id: string;
   name: string;
   user_id: string;
+  description: string;
   event_id: string;
+  isMember?: boolean;
 }
 
 interface RoomsResponse {
@@ -44,8 +46,10 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomDescription, setNewRoomDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { token, isAuthenticated } = useAuth();
+  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
+  const { token, isAuthenticated, user } = useAuth();
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -55,7 +59,61 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
       if (!response.ok)
         throw new Error("Erreur lors du chargement des groupes");
       const data: RoomsResponse = await response.json();
-      setRooms(data.items || []);
+
+      // Fetch membership status for each room if user is authenticated
+      if (isAuthenticated && token && user?.id) {
+        const roomsWithMembership = await Promise.all(
+          (data.items || []).map(async (room) => {
+            try {
+              const memberResponse = await fetch(
+                `/api/room-members/check/${room.id}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              if (memberResponse.ok) {
+                try {
+                  const memberData = await memberResponse.json();
+
+                  // Check if current user is in the members list
+                  let isMember = false;
+                  if (memberData.members && Array.isArray(memberData.members)) {
+                    isMember = memberData.members.some((member: any) => {
+                      const memberId = member.user_id || member.id;
+                      return memberId === user.id;
+                    });
+                  } else if (
+                    memberData.is_member !== null &&
+                    memberData.is_member !== undefined
+                  ) {
+                    isMember = memberData.is_member;
+                  }
+
+                  return { ...room, isMember };
+                } catch (e) {
+                  console.error(
+                    `Error parsing membership data for room ${room.id}:`,
+                    e
+                  );
+                  return { ...room, isMember: false };
+                }
+              }
+            } catch (err) {
+              console.error(
+                `Error checking membership for room ${room.id}:`,
+                err
+              );
+            }
+            return { ...room, isMember: false };
+          })
+        );
+        setRooms(roomsWithMembership);
+      } else {
+        setRooms(data.items || []);
+      }
     } catch (err) {
       setError("Impossible de charger les groupes");
       console.error(err);
@@ -83,6 +141,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
         },
         body: JSON.stringify({
           name: newRoomName,
+          description: newRoomDescription,
           event_id: eventId,
         }),
       });
@@ -93,12 +152,109 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
       }
 
       setNewRoomName("");
+      setNewRoomDescription("");
       await fetchRooms();
     } catch (err: any) {
       setError(err.message || "Impossible de créer le groupe");
       console.error(err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const joinRoom = async (roomId: string) => {
+    if (!isAuthenticated || !token || !user?.id) {
+      setError("Vous devez être connecté pour rejoindre un groupe");
+      console.error("Missing auth data:", {
+        isAuthenticated,
+        hasToken: !!token,
+        user,
+      });
+      return;
+    }
+
+    setJoiningRoomId(roomId);
+    setError(null);
+    try {
+      const response = await fetch("/api/room-members", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId,
+          user_id: user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Erreur lors de l'ajout au groupe";
+        try {
+          const errorData = await response.json();
+          console.error("Error response:", errorData);
+          errorMessage =
+            errorData.error ||
+            errorData.message ||
+            errorData.detail ||
+            errorMessage;
+        } catch (e) {
+          const errorText = await response.text();
+          console.error("Error response (text):", errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      await fetchRooms();
+    } catch (err: any) {
+      setError(err.message || "Impossible de rejoindre le groupe");
+      console.error("Join room error:", err);
+    } finally {
+      setJoiningRoomId(null);
+    }
+  };
+
+  const leaveRoom = async (roomId: string) => {
+    if (!isAuthenticated || !token) {
+      setError("Vous devez être connecté pour quitter un groupe");
+      return;
+    }
+
+    setJoiningRoomId(roomId);
+    setError(null);
+    try {
+      const response = await fetch(`/api/room-members/leave/${roomId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Erreur lors de la sortie du groupe";
+        try {
+          const errorData = await response.json();
+          console.error("Error response:", errorData);
+          errorMessage =
+            errorData.error ||
+            errorData.message ||
+            errorData.detail ||
+            errorMessage;
+        } catch (e) {
+          const errorText = await response.text();
+          console.error("Error response (text):", errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      await fetchRooms();
+    } catch (err: any) {
+      setError(err.message || "Impossible de quitter le groupe");
+      console.error("Leave room error:", err);
+    } finally {
+      setJoiningRoomId(null);
     }
   };
 
@@ -153,6 +309,16 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
                     }}
                     disabled={creating}
                   />
+                  <Input
+                    type="text"
+                    placeholder="Description du groupe"
+                    value={newRoomDescription}
+                    onChange={(e) => setNewRoomDescription(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") createRoom();
+                    }}
+                    disabled={creating}
+                  />
                   <Button
                     onClick={createRoom}
                     disabled={creating || !newRoomName.trim()}
@@ -198,11 +364,50 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
                           <Users className="h-5 w-5 text-muted-foreground" />
                           <div>
                             <p className="font-medium">{room.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {room.description}
+                            </p>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline">
-                          Rejoindre
-                        </Button>
+                        {!isAuthenticated ? (
+                          <Button size="sm" variant="outline" asChild>
+                            <Link href="/login">
+                              <LogIn className="mr-2 h-4 w-4" />
+                              Se connecter
+                            </Link>
+                          </Button>
+                        ) : room.isMember ? (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => leaveRoom(room.id)}
+                              disabled={joiningRoomId === room.id}
+                            >
+                              {joiningRoomId === room.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Quitter"
+                              )}
+                            </Button>
+                            <Button size="sm" variant="default" asChild>
+                              <Link href={`/rooms/${room.id}`}>Accéder</Link>
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => joinRoom(room.id)}
+                            disabled={joiningRoomId === room.id}
+                          >
+                            {joiningRoomId === room.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Rejoindre"
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

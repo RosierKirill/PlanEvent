@@ -1,3 +1,4 @@
+import { AdminEventControls } from "@/components/admin-event-controls";
 import { EventMiniMap } from "@/components/event-mini-map";
 import { ParticipateButton } from "@/components/participate-button";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { ArrowLeft, Calendar, Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminEventControls } from "@/components/admin-event-controls";
 
 async function fetchEvent(id: string) {
   const base = process.env.API_BASE || process.env.NEXT_PUBLIC_API_BASE || "";
@@ -56,28 +56,38 @@ export default async function EventPage({ params }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          {/* Image principale */}
-          <div className="relative w-full h-[400px] rounded-xl overflow-hidden shadow-lg">
-            <Image
-              src={event.image || "/event.png"}
-              alt={event.title || "Image de l'événement"}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-          {event.tags && Array.isArray(event.tags) && event.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {event.tags.map((tag: string, idx: number) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-s font-medium bg-primary/10 text-primary border border-primary/20"
-                >
-                  {tag}
-                </span>
-              ))}
+          <Card className="pt-0">
+            {/* Image principale */}
+            <div className="relative w-full h-[400px] rounded-xl overflow-hidden shadow-lg">
+              <Image
+                src={event.image || "/event.png"}
+                alt={event.title || "Image de l'événement"}
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-          ) : null}
+            <CardContent>
+              <div className="prose max-w-none">
+                <p>{event.description}</p>
+              </div>
+            </CardContent>
+
+            {event.tags &&
+            Array.isArray(event.tags) &&
+            event.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 p-6 py-0">
+                {event.tags.map((tag: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-s font-medium bg-primary/10 text-primary border border-primary/20"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -89,7 +99,9 @@ export default async function EventPage({ params }: Props) {
                 <Users className="h-4 w-4" />
                 Participants
               </CardDescription>
-              <CardTitle className="text-3xl">{event.total_participants ?? event.attendees ?? 0}</CardTitle>
+              <CardTitle className="text-3xl">
+                {event.total_participants ?? 0}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ParticipateButton eventId={id} />

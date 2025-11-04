@@ -116,11 +116,11 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
   const position: LatLngExpression = [coords.lat, coords.lon];
 
   return (
-    <div className="w-full h-[250px] rounded-lg overflow-hidden border">
+    <div className="w-full h-[250px] rounded-lg overflow-hidden border relative" style={{ zIndex: 0 }}>
       <MapContainer
         center={position}
         zoom={13}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100%", width: "100%", zIndex: 0 }}
         scrollWheelZoom={false}
         dragging={false}
         zoomControl={false}

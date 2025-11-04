@@ -204,11 +204,11 @@ export function EventMap() {
       : center;
 
   return (
-    <div className="w-full h-[600px] rounded-lg overflow-hidden border">
+    <div className="w-full h-[600px] rounded-lg overflow-hidden border relative" style={{ zIndex: 0 }}>
       <MapContainer
         center={mapCenter}
         zoom={events.length > 0 ? 12 : 11}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100%", width: "100%", zIndex: 0 }}
         scrollWheelZoom={true}
       >
         <TileLayer
