@@ -3,18 +3,18 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
-  Heart,
   Music,
   Palette,
   PartyPopper,
   Sparkles,
   Trophy,
   Users,
-  Utensils,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const EVENT_TYPES = [
   { id: "concert", label: "Concert", icon: Music },
@@ -35,6 +35,8 @@ export function EventTagFilter() {
   const searchParams = useSearchParams();
   const activeTag = searchParams?.get("tag");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   function onSelect(tagId?: string) {
     const params = new URLSearchParams(Array.from(searchParams || []));
@@ -47,6 +49,31 @@ export function EventTagFilter() {
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }
 
+  function checkScrollability() {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (scrollContainer) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+        setCanScrollLeft(scrollLeft > 0);
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+      }
+    }
+  }
+
+  function scrollLeft() {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (scrollContainer) {
+        scrollContainer.scrollBy({ left: -300, behavior: "smooth" });
+        setTimeout(checkScrollability, 100);
+      }
+    }
+  }
+
   function scrollRight() {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
@@ -54,14 +81,42 @@ export function EventTagFilter() {
       );
       if (scrollContainer) {
         scrollContainer.scrollBy({ left: 300, behavior: "smooth" });
+        setTimeout(checkScrollability, 100);
       }
     }
   }
 
+  useEffect(() => {
+    checkScrollability();
+    const scrollContainer = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    );
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", checkScrollability);
+      window.addEventListener("resize", checkScrollability);
+      return () => {
+        scrollContainer.removeEventListener("scroll", checkScrollability);
+        window.removeEventListener("resize", checkScrollability);
+      };
+    }
+  }, []);
+
   return (
-    <div className="mb-8">
+    <div className="mb-4 relative flex items-center">
+      {canScrollLeft && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={scrollLeft}
+          className="absolute left-0 top-[20px] h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background z-10 "
+          aria-label="Défiler vers la gauche"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+      )}
+
       <ScrollArea className="w-full whitespace-nowrap" ref={scrollAreaRef}>
-        <div className="flex gap-4 pb-4">
+        <div className="flex gap-4 pb-4 px-2">
           <Button
             variant="ghost"
             onClick={() => onSelect(undefined)}
@@ -119,15 +174,18 @@ export function EventTagFilter() {
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={scrollRight}
-        className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 z-10"
-        aria-label="Défiler vers la droite"
-      >
-        <Sparkles className="h-5 w-5" />
-      </Button>
+
+      {canScrollRight && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={scrollRight}
+          className="absolute right-0 top-[20px] h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background z-10"
+          aria-label="Défiler vers la droite"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }

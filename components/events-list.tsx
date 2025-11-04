@@ -30,11 +30,6 @@ export default function EventsList() {
       .then(async (res) => {
         const ct = res.headers.get("content-type") || "";
         const text = await res.text();
-        console.log("Client received response:", {
-          status: res.status,
-          contentType: ct,
-          body: text,
-        });
 
         if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`);
         if (!ct.includes("application/json"))
@@ -48,8 +43,6 @@ export default function EventsList() {
         }
       })
       .then((data) => {
-        console.log("Parsed response data:", data);
-
         // Normalize possible response shapes from upstream
         // Accept: Array, { events: Array }, { data: Array }, { items: Array }, { results: Array }
         let list: any[] = [];
@@ -57,8 +50,6 @@ export default function EventsList() {
         else if (data && typeof data === "object") {
           list = data.events || data.data || data.items || data.results || [];
         }
-
-        console.log("Normalized events list:", list);
 
         if (!Array.isArray(list)) {
           console.error("Expected array but got:", typeof list, list);
@@ -93,8 +84,8 @@ export default function EventsList() {
           const tagNeedle = tag.trim().toLowerCase();
           filtered = filtered.filter((ev: any) => {
             if (!Array.isArray(ev.tags)) return false;
-            return ev.tags.some((t: any) =>
-              String(t).toLowerCase() === tagNeedle
+            return ev.tags.some(
+              (t: any) => String(t).toLowerCase() === tagNeedle
             );
           });
         }
@@ -112,7 +103,7 @@ export default function EventsList() {
   if (error) return <div className="text-red-500">Erreur : {error}</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {events.map((ev) => {
         const title = ev.title || ev.name || "Sans titre";
         const start = ev.date || ev.start_date;

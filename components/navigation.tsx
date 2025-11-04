@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar, Home, Users } from "lucide-react";
+import { Calendar, Home, Map, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +9,7 @@ export function Navigation() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isEvents = pathname?.startsWith("/events");
+  const isMap = pathname?.startsWith("/map");
   const isRooms = pathname?.startsWith("/rooms");
 
   return (
@@ -39,6 +40,19 @@ export function Navigation() {
             >
               <Calendar className="h-4 w-4" />
               Événements
+            </Button>
+          </Link>
+          <Link href="/map">
+            <Button
+              variant="ghost"
+              className={`gap-2 rounded-none border-b-2 ${
+                isMap
+                  ? "border-primary"
+                  : "border-transparent hover:border-primary"
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              Carte
             </Button>
           </Link>
           <Link href="/rooms">
