@@ -100,7 +100,7 @@ export const RealtimeChat = ({
           </div>
         ) : allMessages.length === 0 ? (
           <div className="text-center text-sm text-muted-foreground">
-            No messages yet. Start the conversation!
+            Pas de messages. Commencez votre conversation!
           </div>
         ) : null}
         <div className="space-y-1">

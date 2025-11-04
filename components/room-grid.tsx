@@ -3,6 +3,9 @@ import { RoomCard } from "@/components/room-card";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { LogIn } from "lucide-react";
 
 export function RoomGrid() {
   const [rooms, setRooms] = React.useState<any[]>([]);
@@ -13,6 +16,7 @@ export function RoomGrid() {
   const q = searchParams?.get("q");
 
   const { token, isAuthenticated, user } = useAuth();
+  const [authPrompt, setAuthPrompt] = React.useState(false);
 
   React.useEffect(() => {
     setLoading(true);
@@ -92,7 +96,8 @@ export function RoomGrid() {
   const [joiningId, setJoiningId] = React.useState<string | null>(null);
   const onJoin = async (roomId: string) => {
     if (!isAuthenticated || !token || !user?.id) {
-      setError("Vous devez être connecté pour rejoindre un groupe");
+      setAuthPrompt(true);
+      setError(null);
       return;
     }
     setJoiningId(roomId);
@@ -139,16 +144,30 @@ export function RoomGrid() {
   if (rooms.length === 0) return <div>Aucune salle trouvée.</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {rooms.map((room) => (
-        <RoomCard
-          key={room.id}
-          room={room}
-          onJoin={onJoin}
-          onLeave={onLeave}
-          joiningId={joiningId}
-        />
-      ))}
-    </div>
+    <>
+      {authPrompt && (
+        <div className="mb-4 p-4 border rounded-md bg-muted/50 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            Vous devez être connecté pour rejoindre un groupe
+          </span>
+          <Button asChild size="sm">
+            <Link href="/login">
+              <LogIn className="mr-2 h-4 w-4" /> Se connecter
+            </Link>
+          </Button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {rooms.map((room) => (
+          <RoomCard
+            key={room.id}
+            room={room}
+            onJoin={onJoin}
+            onLeave={onLeave}
+            joiningId={joiningId}
+          />
+        ))}
+      </div>
+    </>
   );
 }

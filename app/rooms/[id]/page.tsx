@@ -225,9 +225,9 @@ export default function RoomPage() {
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/events/${room.event_id}`}>
+            <Link href={`/rooms`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à l'événement
+              Retour aux salles
             </Link>
           </Button>
         </div>
@@ -249,9 +249,9 @@ export default function RoomPage() {
     <main className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/events/${room.event_id}`}>
+          <Link href={`/rooms`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à l'événement
+            Retour aux salles
           </Link>
         </Button>
       </div>
