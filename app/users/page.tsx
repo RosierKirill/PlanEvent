@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { useAuthToken } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import * as React from "react";
 
 export default function UsersAdminPage() {
   const isAdmin = useIsAdmin();
@@ -16,7 +16,9 @@ export default function UsersAdminPage() {
   React.useEffect(() => {
     if (!isAdmin) return;
     setLoading(true);
-    const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token
+      ? { authorization: `Bearer ${token}` }
+      : {};
     fetch(`/api/users?limit=1000`, { headers })
       .then(async (res) => {
         const txt = await res.text();
@@ -42,13 +44,19 @@ export default function UsersAdminPage() {
         "content-type": "application/json",
         authorization: `Bearer ${token}`,
       };
+      const payload = { name: u.name, email: u.email, role: u.role };
+      console.log("Sending update:", payload);
       const res = await fetch(`/api/users/${u.id}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ name: u.name, email: u.email, role: u.role }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(await res.text());
+      const responseText = await res.text();
+      console.log("Response status:", res.status, "Body:", responseText);
+      if (!res.ok) throw new Error(responseText || `Erreur ${res.status}`);
+      alert("Utilisateur mis à jour avec succès");
     } catch (e: any) {
+      console.error("Save error:", e);
       alert(e?.message || "Sauvegarde impossible");
     } finally {
       setSavingId(null);
@@ -60,8 +68,13 @@ export default function UsersAdminPage() {
     if (!confirm("Supprimer cet utilisateur ?")) return;
     setDeletingId(id);
     try {
-      const headers: Record<string, string> = { authorization: `Bearer ${token}` };
-      const res = await fetch(`/api/users/${id}`, { method: "DELETE", headers });
+      const headers: Record<string, string> = {
+        authorization: `Bearer ${token}`,
+      };
+      const res = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+        headers,
+      });
       if (!res.ok) throw new Error(await res.text());
       setUsers((prev) => prev.filter((x) => x.id !== id));
     } catch (e: any) {
@@ -74,7 +87,9 @@ export default function UsersAdminPage() {
   if (!isAdmin)
     return (
       <main className="container mx-auto px-4 py-8">
-        <div className="text-sm text-muted-foreground">Accès réservé à l'admin.</div>
+        <div className="text-sm text-muted-foreground">
+          Accès réservé à l'admin.
+        </div>
       </main>
     );
 
@@ -92,7 +107,7 @@ export default function UsersAdminPage() {
               <th className="p-2 text-left">Nom</th>
               <th className="p-2 text-left">Email</th>
               <th className="p-2 text-left">Rôle</th>
-              <th className="p-2 text-right">Actions</th>
+              <th className="p-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -103,24 +118,45 @@ export default function UsersAdminPage() {
                   <input
                     className="border rounded px-2 py-1 w-56"
                     value={u.name || ""}
-                    onChange={(e) => setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, name: e.target.value } : x)))}
+                    onChange={(e) =>
+                      setUsers((prev) =>
+                        prev.map((x) =>
+                          x.id === u.id ? { ...x, name: e.target.value } : x
+                        )
+                      )
+                    }
                   />
                 </td>
                 <td className="p-2 align-top">
                   <input
                     className="border rounded px-2 py-1 w-64"
                     value={u.email || ""}
-                    onChange={(e) => setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, email: e.target.value } : x)))}
+                    onChange={(e) =>
+                      setUsers((prev) =>
+                        prev.map((x) =>
+                          x.id === u.id ? { ...x, email: e.target.value } : x
+                        )
+                      )
+                    }
                   />
                 </td>
                 <td className="p-2 align-top">
-                  <input
-                    className="border rounded px-2 py-1 w-32"
-                    value={u.role || ""}
-                    onChange={(e) => setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: e.target.value } : x)))}
-                  />
+                  <select
+                    className="border rounded px-2 py-1 w-32 dark:bg-background "
+                    value={u.role || "user"}
+                    onChange={(e) =>
+                      setUsers((prev) =>
+                        prev.map((x) =>
+                          x.id === u.id ? { ...x, role: e.target.value } : x
+                        )
+                      )
+                    }
+                  >
+                    <option value="user">user</option>
+                    <option value="admin">admin</option>
+                  </select>
                 </td>
-                <td className="p-2 align-top text-right">
+                <td className="p-2 align-top text-center">
                   <button
                     onClick={() => save(u)}
                     disabled={savingId === u.id}
@@ -144,4 +180,3 @@ export default function UsersAdminPage() {
     </main>
   );
 }
-

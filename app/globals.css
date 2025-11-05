@@ -206,30 +206,30 @@
       transform: translateY(calc(-100% - var(--gap)));
     }
   }
-  --animate-aurora: aurora 8s ease-in-out infinite alternate
-;
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
   @keyframes aurora {
-  0% {
-    background-position: 0% 50%;
-    transform: rotate(-5deg) scale(0.9);
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
     }
-  25% {
-    background-position: 50% 100%;
-    transform: rotate(5deg) scale(1.1);
+    25% {
+      background-position: 50% 100%;
+      transform: rotate(5deg) scale(1.1);
     }
-  50% {
-    background-position: 100% 50%;
-    transform: rotate(-3deg) scale(0.95);
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(-3deg) scale(0.95);
     }
-  75% {
-    background-position: 50% 0%;
-    transform: rotate(3deg) scale(1.05);
+    75% {
+      background-position: 50% 0%;
+      transform: rotate(3deg) scale(1.05);
     }
-  100% {
-    background-position: 0% 50%;
-    transform: rotate(-5deg) scale(0.9);
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
     }
-  }}
+  }
+}
 
 @layer base {
   * {
@@ -251,4 +251,75 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* Schedule-X Calendar */
+.sx-react-calendar-wrapper {
+  width: 100%;
+  height: 700px;
+}
+
+/* Schedule-X Dark Mode Support */
+.dark .sx__month-grid-day,
+.dark .sx__calendar-wrapper {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .sx__month-grid-day.is-today {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.dark .sx__date-grid-day,
+.dark .sx__day-name {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .sx__month-grid-cell {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .sx__week-grid,
+.dark .sx__day-grid {
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .sx__time-grid-day {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .sx__view-header {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .sx__calendar-header,
+.dark .sx__calendar-header-content {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .sx__month-agenda-day {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .sx__month-agenda-day__header {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .sx__month-grid-event {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .sx-react-calendar-wrapper button {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Schedule-X Calendar colors for user events */
+.sx__event.sx__user-events-event {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
 }

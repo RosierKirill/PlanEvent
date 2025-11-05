@@ -1,11 +1,14 @@
+import "temporal-polyfill/global";
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { PWARegister } from "@/components/pwa-register";
 import "leaflet/dist/leaflet.css";
+import "@schedule-x/theme-shadcn/dist/index.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./calendar-theme.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

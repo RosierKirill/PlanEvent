@@ -1,5 +1,6 @@
 "use client";
 
+import { UserEventsCalendar } from "@/components/user-events-calendar";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -69,7 +70,6 @@ export default function ProfilePage() {
   const fields: Array<{ key: string; label: string }> = [
     { key: "name", label: "Nom" },
     { key: "email", label: "Email" },
-    { key: "id", label: "ID" },
   ];
 
   const visible =
@@ -80,15 +80,22 @@ export default function ProfilePage() {
     setSaving(true);
     setError(null);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const headers: Record<string, string> = { "content-type": "application/json" };
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+      };
       if (token) headers["authorization"] = `Bearer ${token}`;
       // Validate password fields if provided
       if (form.newPassword || form.currentPassword) {
         const current = form.currentPassword?.trim() || "";
         const pwd = form.newPassword?.trim() || "";
-        if (!current || !pwd) throw new Error("Ancien et nouveau mot de passe requis");
-        if (pwd.length < 6) throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+        if (!current || !pwd)
+          throw new Error("Ancien et nouveau mot de passe requis");
+        if (pwd.length < 6)
+          throw new Error(
+            "Le mot de passe doit contenir au moins 6 caractères"
+          );
       }
 
       // 1) Update profile (name/email) if provided
@@ -97,7 +104,10 @@ export default function ProfilePage() {
         email: form.email,
       };
       let mergedUser: any = null;
-      if (profilePayload.name !== undefined || profilePayload.email !== undefined) {
+      if (
+        profilePayload.name !== undefined ||
+        profilePayload.email !== undefined
+      ) {
         const resProfile = await fetch("/api/users/me", {
           method: "PATCH",
           headers,
@@ -105,9 +115,16 @@ export default function ProfilePage() {
         });
         const textP = await resProfile.text();
         const ctP = resProfile.headers.get("content-type") || "";
-        const dataP = ctP.includes("application/json") ? JSON.parse(textP || "{}") : { raw: textP };
+        const dataP = ctP.includes("application/json")
+          ? JSON.parse(textP || "{}")
+          : { raw: textP };
         if (!resProfile.ok) {
-          throw new Error(dataP?.error || dataP?.message || dataP?.raw || `Erreur ${resProfile.status}`);
+          throw new Error(
+            dataP?.error ||
+              dataP?.message ||
+              dataP?.raw ||
+              `Erreur ${resProfile.status}`
+          );
         }
         mergedUser = dataP;
       }
@@ -117,7 +134,10 @@ export default function ProfilePage() {
         const current = form.currentPassword?.trim() || "";
         const pwd = form.newPassword.trim();
         // Backend expects camelCase keys per Swagger
-        const passwordPayload: any = { currentPassword: current, newPassword: pwd };
+        const passwordPayload: any = {
+          currentPassword: current,
+          newPassword: pwd,
+        };
         const resPwd = await fetch("/api/users/me/password", {
           method: "PATCH",
           headers,
@@ -125,9 +145,16 @@ export default function ProfilePage() {
         });
         const textW = await resPwd.text();
         const ctW = resPwd.headers.get("content-type") || "";
-        const dataW = ctW.includes("application/json") ? JSON.parse(textW || "{}") : { raw: textW };
+        const dataW = ctW.includes("application/json")
+          ? JSON.parse(textW || "{}")
+          : { raw: textW };
         if (!resPwd.ok) {
-          throw new Error(dataW?.error || dataW?.message || dataW?.raw || `Erreur ${resPwd.status}`);
+          throw new Error(
+            dataW?.error ||
+              dataW?.message ||
+              dataW?.raw ||
+              `Erreur ${resPwd.status}`
+          );
         }
       }
 
@@ -145,116 +172,141 @@ export default function ProfilePage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Mon profil</h1>
-      <div className="p-4 border rounded-md bg-card">
-        {!editing ? (
-          <>
-            {visible.length > 0 ? (
+      {/* Profile Information */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Informations du profil</h2>
+        <div className="p-4 border rounded-md bg-card">
+          {!editing ? (
+            <>
+              {visible.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {visible.map(({ key, label }) => (
+                    <div key={key} className="flex flex-col">
+                      <span className="text-sm text-muted-foreground">
+                        {label}
+                      </span>
+                      <span className="text-base font-medium wrap-break-words">
+                        {String((user as any)[key])}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Aucune information de profil à afficher.
+                </div>
+              )}
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="px-4 py-2 rounded-md border hover:bg-accent"
+                >
+                  Modifier le profil
+                </button>
+                <button
+                  onClick={logout}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md"
+                >
+                  Se déconnecter
+                </button>
+              </div>
+            </>
+          ) : (
+            <form onSubmit={saveProfile} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {visible.map(({ key, label }) => (
-                  <div key={key} className="flex flex-col">
-                    <span className="text-sm text-muted-foreground">{label}</span>
-                    <span className="text-base font-medium break-words">
-                      {String((user as any)[key])}
-                    </span>
-                  </div>
-                ))}
+                <div className="flex flex-col">
+                  <label className="text-sm text-muted-foreground">Nom</label>
+                  <input
+                    type="text"
+                    value={form.name ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                    className="mt-1 px-3 py-2 border rounded-md bg-background"
+                  />
+                </div>
+                <div className="flex flex-col md:col-span-2">
+                  <label className="text-sm text-muted-foreground">Email</label>
+                  <input
+                    type="email"
+                    value={form.email ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, email: e.target.value }))
+                    }
+                    className="mt-1 px-3 py-2 border rounded-md bg-background"
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                Aucune information de profil à afficher.
+              {/* Password change (two fields only) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label className="text-sm text-muted-foreground">
+                    Ancien mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    value={form.currentPassword ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        currentPassword: e.target.value,
+                      }))
+                    }
+                    placeholder="Requis pour changer le mot de passe"
+                    className="mt-1 px-3 py-2 border rounded-md bg-background"
+                    autoComplete="current-password"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm text-muted-foreground">
+                    Nouveau mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    value={form.newPassword ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, newPassword: e.target.value }))
+                    }
+                    placeholder="Laisser vide pour ne pas changer"
+                    className="mt-1 px-3 py-2 border rounded-md bg-background"
+                    autoComplete="new-password"
+                  />
+                </div>
               </div>
-            )}
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setEditing(true)}
-                className="px-4 py-2 rounded-md border hover:bg-accent"
-              >
-                Modifier le profil
-              </button>
-              <button
-                onClick={logout}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md"
-              >
-                Se déconnecter
-              </button>
-            </div>
-          </>
-        ) : (
-          <form onSubmit={saveProfile} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm text-muted-foreground">Nom</label>
-                <input
-                  type="text"
-                  value={form.name ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="mt-1 px-3 py-2 border rounded-md bg-background"
-                />
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(false);
+                    setForm({
+                      name: (user as any)?.name ?? "",
+                      email: (user as any)?.email ?? "",
+                      currentPassword: "",
+                      newPassword: "",
+                    });
+                  }}
+                  className="px-4 py-2 rounded-md border hover:bg-accent"
+                  disabled={saving}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md disabled:opacity-50"
+                  disabled={saving}
+                >
+                  {saving ? "Enregistrement..." : "Enregistrer"}
+                </button>
               </div>
-              <div className="flex flex-col md:col-span-2">
-                <label className="text-sm text-muted-foreground">Email</label>
-                <input
-                  type="email"
-                  value={form.email ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  className="mt-1 px-3 py-2 border rounded-md bg-background"
-                />
-              </div>
-            </div>
-            {/* Password change (two fields only) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm text-muted-foreground">Ancien mot de passe</label>
-                <input
-                  type="password"
-                  value={form.currentPassword ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, currentPassword: e.target.value }))}
-                  placeholder="Requis pour changer le mot de passe"
-                  className="mt-1 px-3 py-2 border rounded-md bg-background"
-                  autoComplete="current-password"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm text-muted-foreground">Nouveau mot de passe</label>
-                <input
-                  type="password"
-                  value={form.newPassword ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
-                  placeholder="Laisser vide pour ne pas changer"
-                  className="mt-1 px-3 py-2 border rounded-md bg-background"
-                  autoComplete="new-password"
-                />
-              </div>
-            </div>
-            <div className="pt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(false);
-                  setForm({
-                    name: (user as any)?.name ?? "",
-                    email: (user as any)?.email ?? "",
-                    currentPassword: "",
-                    newPassword: "",
-                  });
-                }}
-                className="px-4 py-2 rounded-md border hover:bg-accent"
-                disabled={saving}
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md disabled:opacity-50"
-                disabled={saving}
-              >
-                {saving ? "Enregistrement..." : "Enregistrer"}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+            </form>
+          )}
+        </div>
+      </section>
+      {/* User Events Calendar */}
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Mon calendrier</h2>
+        <UserEventsCalendar />
+      </section>
     </main>
   );
 }
