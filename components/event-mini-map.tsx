@@ -54,7 +54,8 @@ export function EventMiniMap({ location, name }: EventMiniMapProps) {
         ? location
         : `${location}, France`;
 
-      const result = await getCachedCoordinates(searchQuery);
+      // skipDelay: true car c'est une seule adresse (pas de batch)
+      const result = await getCachedCoordinates(searchQuery, true);
       setCoords(result);
       setLoading(false);
     };

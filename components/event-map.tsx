@@ -1,6 +1,6 @@
 "use client";
 
-import { getCachedCoordinates } from "@/lib/geocoding-service";
+import { geocodeWithProgress } from "@/lib/geocoding-service";
 import { initializeLeaflet } from "@/lib/leaflet-setup";
 import type { LatLngExpression } from "leaflet";
 import dynamic from "next/dynamic";
@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import { MapSkeleton } from "./map-skeleton";
 import { MapBoundsAdjuster } from "./map-bounds-adjuster";
 
-// Import dynamique consolidé avec skeleton
+// Import dynamique consolidé - tous les composants proviennent du même module
+// Next.js va automatiquement regrouper ces imports car ils viennent de la même source
 const MapContainer = dynamic(
   () => import("./leaflet-map-wrapper").then((mod) => mod.MapContainer),
   { ssr: false, loading: () => <MapSkeleton /> }
@@ -32,6 +33,7 @@ interface Event {
   start_date: string;
   end_date?: string;
   location?: string;
+  address?: string;
   organizer?: string;
   tags?: string[];
   latitude?: number;
@@ -61,6 +63,10 @@ export function EventMap() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        // Réinitialiser les événements au début de chaque fetch
+        setEvents([]);
+        setLoading(true);
+
         const token = localStorage.getItem("token");
         const headers: Record<string, string> = {};
         if (token) {
@@ -90,48 +96,82 @@ export function EventMap() {
             }
           }
 
-          // Géocodage optimisé avec cache
-          const geocodedEvents: EventWithCoords[] = [];
+          // Dédupliquer les événements par ID d'abord
+          const uniqueEvents = Array.from(
+            new Map(eventList.map((event) => [event.id, event])).values()
+          );
 
-          for (let i = 0; i < eventList.length; i++) {
-            const event = eventList[i];
-
-            // Si l'événement a déjà des coordonnées, les utiliser
+          // Ajouter immédiatement les événements qui ont déjà des coordonnées
+          uniqueEvents.forEach((event) => {
             if (event.latitude && event.longitude) {
-              geocodedEvents.push(event as EventWithCoords);
+              const eventWithCoords: EventWithCoords = {
+                id: event.id,
+                name: event.name,
+                start_date: event.start_date,
+                end_date: event.end_date,
+                location: event.location,
+                organizer: event.organizer,
+                tags: event.tags,
+                latitude: event.latitude,
+                longitude: event.longitude,
+              };
+
+              setEvents((prev) => {
+                if (prev.some((e) => e.id === eventWithCoords.id)) {
+                  return prev;
+                }
+                return [...prev, eventWithCoords];
+              });
             }
-            // Si l'événement a une localisation, la géocoder avec cache
-            else if (event.location && typeof event.location === "string") {
-              setGeocodingProgress(
-                `Géocodage ${i + 1}/${eventList.length}: ${event.name}`
-              );
+          });
 
-              // Ajouter "France" pour améliorer la précision du géocodage
-              const searchQuery = event.location.includes("France")
-                ? event.location
-                : `${event.location}, France`;
+          // Préparer les événements qui nécessitent un géocodage
+          const eventsForGeocoding = uniqueEvents
+            .filter((event) => {
+              // Ne géocoder que si pas de coordonnées ET qu'il y a une location
+              const hasCoords = event.latitude && event.longitude;
+              const hasLocation = event.location;
+              return !hasCoords && hasLocation;
+            })
+            .map((event) => {
+              const location = event.location || "";
+              const address = location.includes("France")
+                ? location
+                : `${location}, France`;
+              return { ...event, address };
+            });
 
-              const coords = await getCachedCoordinates(searchQuery);
+          // Géocodage optimisé avec chargement progressif
+          await geocodeWithProgress(
+            eventsForGeocoding,
+            (event, coords, current, total) => {
+              setGeocodingProgress(`Chargement: ${current}/${total} événements`);
 
-              if (coords) {
-                geocodedEvents.push({
-                  ...event,
-                  latitude: coords.lat,
-                  longitude: coords.lng,
+              // Mettre à jour progressivement la carte avec les événements géocodés
+              if (coords || (event.latitude && event.longitude)) {
+                const eventWithCoords: EventWithCoords = {
+                  id: event.id,
+                  name: event.name,
+                  start_date: event.start_date,
+                  end_date: event.end_date,
+                  location: event.location,
+                  organizer: event.organizer,
+                  tags: event.tags,
+                  latitude: event.latitude || coords!.lat,
+                  longitude: event.longitude || coords!.lng,
+                };
+
+                // Ajouter l'événement à la liste au fur et à mesure, en évitant les doublons
+                setEvents((prev) => {
+                  // Vérifier si l'événement existe déjà
+                  if (prev.some((e) => e.id === eventWithCoords.id)) {
+                    return prev;
+                  }
+                  return [...prev, eventWithCoords];
                 });
-              } else {
-                console.warn(
-                  `✗ Failed to geocode "${event.name}" at "${event.location}"`
-                );
               }
-
-              // Délai uniquement si ce n'est pas du cache (respecter Nominatim rate limit)
-              // Le service de cache gère déjà le rate limiting
-              await new Promise((resolve) => setTimeout(resolve, 1100));
             }
-          }
-
-          setEvents(geocodedEvents);
+          );
         }
       } catch (error) {
         console.error("Failed to fetch events:", error);

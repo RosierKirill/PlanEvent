@@ -111,9 +111,11 @@ async function geocodeWithNominatim(
 
 /**
  * Récupère les coordonnées d'une adresse avec cache
+ * @param skipDelay - Si true, ne pas ajouter de délai (pour appels en cache uniquement)
  */
 export async function getCachedCoordinates(
-  address: string
+  address: string,
+  skipDelay: boolean = false
 ): Promise<{ lat: number; lng: number } | null> {
   if (!address || address.trim() === "") {
     return null;
@@ -126,6 +128,12 @@ export async function getCachedCoordinates(
   const cached = cache.data[normalizedAddress];
   if (cached && isCacheValid(cached)) {
     return { lat: cached.lat, lng: cached.lng };
+  }
+
+  // Si pas en cache, on doit appeler l'API - ajouter un délai pour respecter le rate limit
+  if (!skipDelay) {
+    // Petit délai pour respecter Nominatim rate limit (1 req/sec)
+    await new Promise((resolve) => setTimeout(resolve, 1100));
   }
 
   // Géocoder l'adresse
@@ -164,6 +172,105 @@ export async function batchGeocode(
 
     const coords = await getCachedCoordinates(address);
     results.set(address, coords);
+  }
+
+  return results;
+}
+
+/**
+ * Géocode des adresses de manière optimale avec chargement progressif
+ * - Les adresses en cache sont retournées immédiatement
+ * - Les adresses non cachées sont géocodées en parallèle avec rate limiting
+ * - Un callback est appelé pour chaque adresse géocodée (chargement progressif)
+ */
+export async function geocodeWithProgress<T extends { address: string }>(
+  items: T[],
+  onProgress?: (
+    item: T,
+    coords: { lat: number; lng: number } | null,
+    index: number,
+    total: number
+  ) => void
+): Promise<Array<T & { latitude?: number; longitude?: number }>> {
+  const results: Array<T & { latitude?: number; longitude?: number }> = [];
+  const cache = getCache();
+
+  // Séparer les items avec/sans cache
+  const cached: Array<{ item: T; coords: { lat: number; lng: number } }> = [];
+  const toGeocode: Array<{ item: T; index: number }> = [];
+
+  items.forEach((item, index) => {
+    const normalizedAddress = normalizeAddress(item.address);
+    const cachedCoords = cache.data[normalizedAddress];
+
+    if (cachedCoords && isCacheValid(cachedCoords)) {
+      cached.push({
+        item,
+        coords: { lat: cachedCoords.lat, lng: cachedCoords.lng },
+      });
+    } else {
+      toGeocode.push({ item, index });
+    }
+  });
+
+  // Traiter immédiatement les items en cache
+  cached.forEach(({ item, coords }) => {
+    const result = {
+      ...item,
+      latitude: coords.lat,
+      longitude: coords.lng,
+    };
+    results.push(result);
+    if (onProgress) {
+      onProgress(item, coords, results.length, items.length);
+    }
+  });
+
+  // Géocoder les items non cachés avec rate limiting parallèle (max 3 simultanés)
+  const maxConcurrent = 3;
+  const delayBetweenBatches = 1100; // Respect Nominatim rate limit
+
+  for (let i = 0; i < toGeocode.length; i += maxConcurrent) {
+    const batch = toGeocode.slice(i, i + maxConcurrent);
+
+    // Géocoder le batch en parallèle
+    const batchPromises = batch.map(async ({ item }) => {
+      const coords = await geocodeWithNominatim(item.address);
+
+      // Sauvegarder dans le cache si succès
+      if (coords) {
+        const normalizedAddress = normalizeAddress(item.address);
+        cache.data[normalizedAddress] = {
+          lat: coords.lat,
+          lng: coords.lng,
+          timestamp: Date.now(),
+        };
+      }
+
+      return { item, coords };
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+
+    // Ajouter les résultats et appeler le callback
+    batchResults.forEach(({ item, coords }) => {
+      const result = {
+        ...item,
+        ...(coords && { latitude: coords.lat, longitude: coords.lng }),
+      };
+      results.push(result);
+      if (onProgress) {
+        onProgress(item, coords, results.length, items.length);
+      }
+    });
+
+    // Sauvegarder le cache après chaque batch
+    saveCache(cache);
+
+    // Délai entre les batches (sauf pour le dernier)
+    if (i + maxConcurrent < toGeocode.length) {
+      await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+    }
   }
 
   return results;
