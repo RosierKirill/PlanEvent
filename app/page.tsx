@@ -6,6 +6,7 @@ import { ReviewCard, reviews } from "@/components/reviews";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { Marquee } from "@/components/ui/marquee";
 import { SparklesText } from "@/components/ui/sparkles-text";
+import { Plus } from "lucide-react";
 import * as React from "react";
 
 export default function Home() {
@@ -25,8 +26,19 @@ export default function Home() {
         {/* Event Section */}
         <div>
           <React.Suspense fallback={<div>Chargement des événements...</div>}>
-            <h2 className="text-2xl font-bold mb-4">Événements à venir</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Événements à venir</h2>
+            </div>
             <EventsList limit={6} />
+            <div className="w-full flex items-center justify-center mt-4">
+              <a
+                href="/events"
+                className="inline-flex items-center justify-center gap-2 text-primary rounded-md text-sm font-light ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-primary/20 h-10 px-4 py-2"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Voir les autres événements</span>
+              </a>
+            </div>
           </React.Suspense>
         </div>
 

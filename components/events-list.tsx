@@ -133,8 +133,19 @@ export default function EventsList({ limit }: EventsListProps) {
           paginationData = null;
         }
 
+        // Filter out past events ONLY on home page (when limit is specified)
+        let finalList = filtered;
+        if (limit) {
+          const now = new Date();
+          finalList = filtered.filter((ev: any) => {
+            const eventDate = ev.end_date || ev.date || ev.start_date;
+            if (!eventDate) return true; // Keep events without dates
+            return new Date(eventDate) >= now;
+          });
+        }
+
         // Apply limit if specified (mode home)
-        const finalEvents = limit ? filtered.slice(0, limit) : filtered;
+        const finalEvents = limit ? finalList.slice(0, limit) : finalList;
 
         setEvents(finalEvents);
         setPagination(paginationData);
