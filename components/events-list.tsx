@@ -1,5 +1,6 @@
 "use client";
 import { useAuthToken } from "@/hooks/use-auth";
+import { getImageForTags } from "@/lib/tag-images";
 import { Calendar, MapPin } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -112,7 +113,8 @@ export default function EventsList() {
         const endStr = end ? new Date(end).toLocaleDateString() : "";
         const when = endStr && startStr ? `${startStr} – ${endStr}` : startStr;
 
-        const imageUrl = ev.image_url || ev.image || ev.photo || "/event.png";
+        const tagImage = getImageForTags(ev.tags);
+        const imageUrl = tagImage || ev.image_url || ev.image || ev.photo || "/event.png";
 
         return (
           <a
