@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { ArrowLeft, Calendar, Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
+import { getImageForTags } from "@/lib/tag-images";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -60,7 +61,7 @@ export default async function EventPage({ params }: Props) {
             {/* Image principale */}
             <div className="relative w-full h-[400px] rounded-xl overflow-hidden shadow-lg">
               <Image
-                src={event.image || "/event.png"}
+                src={getImageForTags(event.tags) || event.image || "/event.png"}
                 alt={event.title || "Image de l'événement"}
                 fill
                 className="object-cover"
