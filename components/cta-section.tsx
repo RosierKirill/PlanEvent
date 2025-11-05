@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { MagneticButton } from "./ui/magnetic-button";
 
 export function CTASection() {
   const router = useRouter();
@@ -26,14 +27,14 @@ export function CTASection() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-          <Button
+          <MagneticButton
             size="sm"
-            className="text-lg p-6 px-12 group"
+            className="text-lg p-5 px-6! group"
             onClick={() => router.push("/signup")}
           >
             Créer un compte
             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          </MagneticButton>
         </div>
       </div>
     </Card>

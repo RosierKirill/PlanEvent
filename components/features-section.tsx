@@ -34,7 +34,7 @@ export function FeaturesSection() {
       <h2 className="text-3xl font-bold text-center mb-4">
         Tout ce dont vous avez besoin pour vos événements
       </h2>
-      <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+      <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
         Plan'Event simplifie l'organisation de vos sorties et vous aide à
         découvrir de nouveaux événements près de chez vous.
       </p>

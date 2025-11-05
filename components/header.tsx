@@ -1,13 +1,14 @@
 "use client";
 
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Globe, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { BounceButton } from "./ui/bounce-button";
 
 export function Header() {
   const router = useRouter();
@@ -112,22 +113,20 @@ export function Header() {
                   <X className="h-4 w-4" />
                 </button>
 
-                <button
+                <BounceButton
                   type="submit"
                   aria-label="submit search"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-primary px-3 py-1.5 flex items-center z-20"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-primary px-3 py-1.5 flex items-center z-20"
                 >
                   <Search className="h-4 w-4 text-white" />
-                </button>
+                </BounceButton>
               </form>
             </div>
           </div>
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            <AnimatedThemeToggler
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3"
-            />
+            <AnimatedThemeToggler className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3" />
             <Button variant="ghost" size="sm">
               <Globe className="h-4 w-4" />
             </Button>

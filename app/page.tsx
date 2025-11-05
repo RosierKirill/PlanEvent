@@ -9,9 +9,12 @@ import { SparklesText } from "@/components/ui/sparkles-text";
 import * as React from "react";
 
 export default function Home() {
+  const firstRow = reviews.slice(0, Math.ceil(reviews.length / 2));
+  const secondRow = reviews.slice(Math.ceil(reviews.length / 2));
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <main className="container mx-auto px-4 py-8 flex-1 gap-20 flex flex-col">
+      <main className="container mx-auto px-4 py-8 flex-1 gap-24 flex flex-col">
         <h1 className="text-l font-bold mb-8 text-center pb-4 pt-20">
           <SparklesText>
             Organiser vos groupes pour{" "}
@@ -31,12 +34,21 @@ export default function Home() {
         <FeaturesSection />
 
         {/* Marquee Section */}
-        <div className="mb-4 rounded-lg border border-border bg-card/50 overflow-hidden">
+        <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
           <Marquee pauseOnHover className="py-4">
-            {reviews.map((review) => (
+            {firstRow.map((review) => (
               <ReviewCard key={review.username} {...review} />
             ))}
           </Marquee>
+          <Marquee reverse pauseOnHover className="py-4">
+            {secondRow.map((review) => (
+              <ReviewCard key={review.username} {...review} />
+            ))}
+          </Marquee>
+
+          {/* Gradient fades on sides */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-linear-to-r from-background to-transparent"></div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-linear-to-l from-background to-transparent"></div>
         </div>
 
         {/* CTA Section */}
