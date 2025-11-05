@@ -30,7 +30,7 @@ export function CTASection() {
           <MagneticButton
             size="sm"
             className="text-lg p-5 px-6! group"
-            onClick={() => router.push("/signup")}
+            onClick={() => router.push("/register")}
           >
             Créer un compte
             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
