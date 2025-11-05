@@ -5,7 +5,11 @@ import { Calendar, MapPin } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 
-export default function EventsList() {
+interface EventsListProps {
+  limit?: number;
+}
+
+export default function EventsList({ limit }: EventsListProps) {
   const [events, setEvents] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -91,14 +95,17 @@ export default function EventsList() {
           });
         }
 
-        setEvents(filtered);
+        // Apply limit if specified
+        const finalEvents = limit ? filtered.slice(0, limit) : filtered;
+
+        setEvents(finalEvents);
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [q, tag]);
+  }, [q, tag, limit]);
 
   if (loading) return <div>Chargement des événements...</div>;
   if (error) return <div className="text-red-500">Erreur : {error}</div>;

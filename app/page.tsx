@@ -26,7 +26,7 @@ export default function Home() {
         <div>
           <React.Suspense fallback={<div>Chargement des événements...</div>}>
             <h2 className="text-2xl font-bold mb-4">Événements à venir</h2>
-            <EventsList />
+            <EventsList limit={6} />
           </React.Suspense>
         </div>
 
