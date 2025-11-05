@@ -36,7 +36,8 @@ export default function EventsList({ limit }: EventsListProps) {
     if (tag) params.set("tag", tag);
 
     // Si on a une limite, on ne pagine pas (mode "home" avec limite)
-    if (!limit) {
+    // Si on a un filtre de tag, on ne pagine pas non plus (besoin de tous les événements pour filtrer côté client)
+    if (!limit && !tag) {
       params.set("page", String(currentPage));
       params.set("limit", "9"); // 9 événements par page (3 lignes de 3)
     }
@@ -87,40 +88,49 @@ export default function EventsList({ limit }: EventsListProps) {
         }
 
         // Client-side filtering if backend doesn't filter by `q` or `tag`
-        // (seulement si pas de pagination backend)
         let filtered = list;
-        if (!paginationData) {
-          if (q && typeof q === "string" && q.trim()) {
-            const needle = q.trim().toLowerCase();
-            filtered = filtered.filter((ev: any) => {
-              const title = String(ev.title || ev.name || "").toLowerCase();
-              const desc = String(ev.description || "").toLowerCase();
-              const loc = String(ev.location || "").toLowerCase();
-              const tags = Array.isArray(ev.tags)
-                ? ev.tags
-                    .map((t: any) => String(t))
-                    .join(" ")
-                    .toLowerCase()
-                : "";
-              return (
-                title.includes(needle) ||
-                desc.includes(needle) ||
-                loc.includes(needle) ||
-                tags.includes(needle)
-              );
-            });
-          }
 
-          // Filter by tag if specified
-          if (tag && typeof tag === "string" && tag.trim()) {
-            const tagNeedle = tag.trim().toLowerCase();
-            filtered = filtered.filter((ev: any) => {
-              if (!Array.isArray(ev.tags)) return false;
-              return ev.tags.some(
-                (t: any) => String(t).toLowerCase() === tagNeedle
+        // Filter by search query (only if no pagination, to avoid inconsistencies)
+        if (!paginationData && q && typeof q === "string" && q.trim()) {
+          const needle = q.trim().toLowerCase();
+          filtered = filtered.filter((ev: any) => {
+            const title = String(ev.title || ev.name || "").toLowerCase();
+            const desc = String(ev.description || "").toLowerCase();
+            const loc = String(ev.location || "").toLowerCase();
+            const tags = Array.isArray(ev.tags)
+              ? ev.tags
+                  .map((t: any) => String(t))
+                  .join(" ")
+                  .toLowerCase()
+              : "";
+            return (
+              title.includes(needle) ||
+              desc.includes(needle) ||
+              loc.includes(needle) ||
+              tags.includes(needle)
+            );
+          });
+        }
+
+        // ALWAYS filter by tag client-side (backend doesn't support it properly)
+        if (tag && typeof tag === "string" && tag.trim()) {
+          const tagNeedle = tag.trim().toLowerCase();
+          filtered = filtered.filter((ev: any) => {
+            if (!Array.isArray(ev.tags)) return false;
+            return ev.tags.some((t: any) => {
+              const eventTag = String(t).toLowerCase().trim();
+              // Check for exact match or partial match (tag contains needle or needle contains tag)
+              return (
+                eventTag === tagNeedle ||
+                eventTag.includes(tagNeedle) ||
+                tagNeedle.includes(eventTag)
               );
             });
-          }
+          });
+
+          // Disable pagination when filtering by tag client-side
+          // because the filtered results don't match the backend pagination count
+          paginationData = null;
         }
 
         // Apply limit if specified (mode home)
