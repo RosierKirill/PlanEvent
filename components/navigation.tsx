@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar, Home, Map, Users } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { Calendar, Home, Map, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,13 +12,15 @@ export function Navigation() {
   const isEvents = pathname?.startsWith("/events");
   const isMap = pathname?.startsWith("/map");
   const isRooms = pathname?.startsWith("/rooms");
-  const isUsers = pathname?.startsWith("/users") && !pathname?.startsWith("/users/me");
+  const isUsers =
+    pathname?.startsWith("/users") && !pathname?.startsWith("/users/me");
   const isAdmin = useIsAdmin();
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-t md:border-t-0 md:border-b bg-background">
       <div className="container mx-auto px-4">
-        <div className="flex gap-6">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex gap-6">
           <Link href="/">
             <Button
               variant="ghost"
@@ -70,22 +72,90 @@ export function Navigation() {
               <Users className="h-4 w-4" />
               Groupes
             </Button>
-        </Link>
-        {isAdmin && (
-          <Link href="/users">
+          </Link>
+          {isAdmin && (
+            <Link href="/users">
+              <Button
+                variant="ghost"
+                className={`gap-2 rounded-none border-b-2 ${
+                  isUsers
+                    ? "border-primary"
+                    : "border-transparent hover:border-primary"
+                }`}
+              >
+                <UserCog className="h-4 w-4" />
+                Utilisateurs
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex justify-around py-2">
+          <Link href="/" className="flex-1">
             <Button
               variant="ghost"
-              className={`gap-2 rounded-none border-b-2 ${
-                isUsers ? "border-primary" : "border-transparent hover:border-primary"
+              size="sm"
+              className={`w-full flex flex-col gap-1 h-auto py-2 ${
+                isHome ? "text-primary" : ""
               }`}
             >
-              <Users className="h-4 w-4" />
-              Utilisateurs
+              <Home className="h-5 w-5" />
+              <span className="text-xs">Accueil</span>
             </Button>
           </Link>
-        )}
+          <Link href="/events" className="flex-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`w-full flex flex-col gap-1 h-auto py-2 ${
+                isEvents ? "text-primary" : ""
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="text-xs">Événements</span>
+            </Button>
+          </Link>
+          <Link href="/map" className="flex-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`w-full flex flex-col gap-1 h-auto py-2 ${
+                isMap ? "text-primary" : ""
+              }`}
+            >
+              <Map className="h-5 w-5" />
+              <span className="text-xs">Carte</span>
+            </Button>
+          </Link>
+          <Link href="/rooms" className="flex-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`w-full flex flex-col gap-1 h-auto py-2 ${
+                isRooms ? "text-primary" : ""
+              }`}
+            >
+              <Users className="h-5 w-5" />
+              <span className="text-xs">Groupes</span>
+            </Button>
+          </Link>
+          {isAdmin && (
+            <Link href="/users" className="flex-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`w-full flex flex-col gap-1 h-auto py-2 ${
+                  isUsers ? "text-primary" : ""
+                }`}
+              >
+                <UserCog className="h-5 w-5" />
+                <span className="text-xs">Utilisateurs</span>
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
-    </div>
-  </nav>
+    </nav>
   );
 }

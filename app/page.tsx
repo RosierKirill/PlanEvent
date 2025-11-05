@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <main className="container mx-auto px-4 py-8 flex-1 gap-24 flex flex-col">
-        <h1 className="text-l font-bold mb-8 text-center pb-4 pt-20">
+        <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-8 text-center pb-4 pt-12 md:pt-20">
           <SparklesText>
             Organiser vos groupes pour{" "}
             <AuroraText>vos événements favoris</AuroraText>

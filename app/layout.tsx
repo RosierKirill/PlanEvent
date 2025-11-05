@@ -39,9 +39,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          <Navigation />
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            {/* Navigation en haut sur desktop */}
+            <div className="hidden md:block">
+              <Navigation />
+            </div>
+            {/* Contenu principal avec padding bottom sur mobile pour la nav */}
+            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            {/* Navigation en bas sur mobile */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+              <Navigation />
+            </div>
+          </div>
         </ThemeProvider>
       </body>
     </html>
