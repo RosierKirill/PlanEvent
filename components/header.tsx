@@ -3,7 +3,7 @@
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Globe, Menu, Search, User, X } from "lucide-react";
+import { Menu, Search, User, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,12 @@ export function Header() {
   const [isAuthed, setIsAuthed] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const userName =
+    typeof window !== "undefined"
+      ? localStorage.getItem("user")
+        ? JSON.parse(localStorage.getItem("user") || "{}")?.name || "Profil"
+        : "Profil"
+      : "Profil";
 
   React.useEffect(() => {
     setMounted(true);
@@ -130,13 +136,12 @@ export function Header() {
           {/* Right Actions - Desktop */}
           <div className="hidden md:flex items-center gap-2">
             <AnimatedThemeToggler className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3" />
-            <Button variant="ghost" size="sm" className="h-9">
-              <Globe className="h-4 w-4" />
-            </Button>
+
             {isAuthed ? (
               <Link href="/users/me" aria-label="Profil">
                 <Button variant="ghost" size="sm" className="h-9">
                   <User className="h-4 w-4" />
+                  {userName}
                 </Button>
               </Link>
             ) : (
@@ -237,11 +242,6 @@ export function Header() {
               <AnimatedThemeToggler className="flex h-8 items-center justify-start gap-3 px-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground rounded-md w-full">
                 <span className="text-sm">Thème</span>
               </AnimatedThemeToggler>
-
-              <Button variant="ghost" className="justify-start" size="sm">
-                <Globe className="h-4 w-4 mr-2" />
-                Langue
-              </Button>
 
               {isAuthed ? (
                 <Link href="/users/me" onClick={() => setMobileMenuOpen(false)}>
