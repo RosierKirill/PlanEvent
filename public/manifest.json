@@ -1,0 +1,26 @@
+{
+  "name": "Plan'Event",
+  "short_name": "Plan'Event",
+  "description": "Application de coordination de groupe pour événements. Découvrez des événements, créez des groupes de discussion et organisez vos sorties en salle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "events", "lifestyle"],
+  "screenshots": []
+}

@@ -1,5 +1,6 @@
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
+import { PWARegister } from "@/components/pwa-register";
 import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -20,6 +21,26 @@ export const metadata: Metadata = {
   title: "Plan'Event",
   description:
     "Application de coordination de groupe pour événements. Découvrez des événements, créez des groupes de discussion et organisez vos sorties en salle.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Plan'Event",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#8b5cf6",
 };
 
 export default function RootLayout({
@@ -39,6 +60,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <PWARegister />
           <div className="flex flex-col min-h-screen">
             <Header />
             {/* Navigation en haut sur desktop */}
