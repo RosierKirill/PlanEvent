@@ -75,16 +75,6 @@ function RoomCardWithMembership({
     ? optimisticMembership[room.id]
     : fetchedIsMember;
 
-  // Debug logs
-  console.log(`Room ${room.id}:`, {
-    hasOptimisticUpdate,
-    optimisticValue: optimisticMembership?.[room.id],
-    fetchedIsMember,
-    finalIsMember: isMember,
-    filterByMembership,
-    shouldShow: filterByMembership === true ? isMember : !isMember,
-  });
-
   // Don't show card while membership is loading (unless we have optimistic update)
   if (isLoading && !hasOptimisticUpdate) {
     return null;
@@ -196,15 +186,8 @@ export function RoomGrid() {
     }
     setJoiningId(roomId);
 
-    // Optimistic update BEFORE API call: mark as member locally immediately
-    console.log(
-      "onJoin: Setting optimistic update for room",
-      roomId,
-      "to true"
-    );
     setMembershipUpdates((prev) => {
       const next = { ...prev, [roomId]: true };
-      console.log("onJoin: New membershipUpdates state:", next);
       return next;
     });
     setRefreshKey((prev) => prev + 1); // Force re-render
