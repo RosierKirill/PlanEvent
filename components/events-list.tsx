@@ -1,10 +1,11 @@
 "use client";
+import { Pagination } from "@/components/pagination";
 import { useAuthToken } from "@/hooks/use-auth";
 import { getImageForTags } from "@/lib/tag-images";
 import { Calendar, MapPin } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
-import { Pagination } from "@/components/pagination";
+import useSWR from "swr";
 
 interface EventsListProps {
   limit?: number;
@@ -17,11 +18,28 @@ interface PaginationData {
   pages: number;
 }
 
+// Fetcher function for SWR
+const fetcher = async (url: string, token: string | null) => {
+  const headers: Record<string, string> = {};
+  if (token) headers["authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(url, { headers });
+  const ct = res.headers.get("content-type") || "";
+  const text = await res.text();
+
+  if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`);
+  if (!ct.includes("application/json"))
+    throw new Error("Réponse non JSON du serveur");
+
+  try {
+    return JSON.parse(text);
+  } catch (e: any) {
+    console.error("JSON parse error:", e);
+    throw new Error(`Impossible de parser la réponse JSON: ${e.message}`);
+  }
+};
+
 export default function EventsList({ limit }: EventsListProps) {
-  const [events, setEvents] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [pagination, setPagination] = React.useState<PaginationData | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const searchParams = useSearchParams();
@@ -29,136 +47,120 @@ export default function EventsList({ limit }: EventsListProps) {
   const tag = searchParams?.get("tag");
   const token = useAuthToken();
 
-  React.useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (tag) params.set("tag", tag);
+  // Fetch ALL events once with SWR (cached, no refetch on tag change)
+  const { data, error, isLoading } = useSWR(
+    token !== undefined ? ["/api/events", token] : null,
+    ([url, tkn]) => fetcher(url, tkn),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000, // Cache for 1 minute
+    }
+  );
 
-    // Si on a une limite, on ne pagine pas (mode "home" avec limite)
-    // Si on a un filtre de tag, on ne pagine pas non plus (besoin de tous les événements pour filtrer côté client)
-    if (!limit && !tag) {
-      params.set("page", String(currentPage));
-      params.set("limit", "9"); // 9 événements par page (3 lignes de 3)
+  // Process and filter data client-side (instant, no loading)
+  const { events, pagination } = React.useMemo(() => {
+    if (!data) return { events: [], pagination: null };
+
+    // Normalize possible response shapes from upstream
+    let list: any[] = [];
+    let paginationData: PaginationData | null = null;
+
+    if (Array.isArray(data)) {
+      list = data;
+    } else if (data && typeof data === "object") {
+      list = data.events || data.data || data.items || data.results || [];
+      if (data.pagination) {
+        paginationData = data.pagination;
+      }
     }
 
-    const url = `/api/events${
-      params.toString() ? `?${params.toString()}` : ""
-    }`;
+    if (!Array.isArray(list)) {
+      console.error("Expected array but got:", typeof list, list);
+      return { events: [], pagination: null };
+    }
 
-    const headers: Record<string, string> = {};
-    if (token) headers["authorization"] = `Bearer ${token}`;
+    // Client-side filtering
+    let filtered = list;
 
-    fetch(url, { headers })
-      .then(async (res) => {
-        const ct = res.headers.get("content-type") || "";
-        const text = await res.text();
-
-        if (!res.ok) throw new Error(`Erreur ${res.status}: ${text}`);
-        if (!ct.includes("application/json"))
-          throw new Error("Réponse non JSON du serveur");
-
-        try {
-          return JSON.parse(text);
-        } catch (e: any) {
-          console.error("JSON parse error:", e);
-          throw new Error(`Impossible de parser la réponse JSON: ${e.message}`);
-        }
-      })
-      .then((data) => {
-        // Normalize possible response shapes from upstream
-        // Accept: Array, { events: Array }, { data: Array }, { items: Array }, { results: Array }
-        let list: any[] = [];
-        let paginationData: PaginationData | null = null;
-
-        if (Array.isArray(data)) {
-          list = data;
-        } else if (data && typeof data === "object") {
-          list = data.events || data.data || data.items || data.results || [];
-
-          // Extract pagination info if available
-          if (data.pagination) {
-            paginationData = data.pagination;
-          }
-        }
-
-        if (!Array.isArray(list)) {
-          console.error("Expected array but got:", typeof list, list);
-          throw new Error("Format de réponse inattendu pour les événements");
-        }
-
-        // Client-side filtering if backend doesn't filter by `q` or `tag`
-        let filtered = list;
-
-        // Filter by search query (only if no pagination, to avoid inconsistencies)
-        if (!paginationData && q && typeof q === "string" && q.trim()) {
-          const needle = q.trim().toLowerCase();
-          filtered = filtered.filter((ev: any) => {
-            const title = String(ev.title || ev.name || "").toLowerCase();
-            const desc = String(ev.description || "").toLowerCase();
-            const loc = String(ev.location || "").toLowerCase();
-            const tags = Array.isArray(ev.tags)
-              ? ev.tags
-                  .map((t: any) => String(t))
-                  .join(" ")
-                  .toLowerCase()
-              : "";
-            return (
-              title.includes(needle) ||
-              desc.includes(needle) ||
-              loc.includes(needle) ||
-              tags.includes(needle)
-            );
-          });
-        }
-
-        // ALWAYS filter by tag client-side (backend doesn't support it properly)
-        if (tag && typeof tag === "string" && tag.trim()) {
-          const tagNeedle = tag.trim().toLowerCase();
-          filtered = filtered.filter((ev: any) => {
-            if (!Array.isArray(ev.tags)) return false;
-            return ev.tags.some((t: any) => {
-              const eventTag = String(t).toLowerCase().trim();
-              // Check for exact match or partial match (tag contains needle or needle contains tag)
-              return (
-                eventTag === tagNeedle ||
-                eventTag.includes(tagNeedle) ||
-                tagNeedle.includes(eventTag)
-              );
-            });
-          });
-
-          // Disable pagination when filtering by tag client-side
-          // because the filtered results don't match the backend pagination count
-          paginationData = null;
-        }
-
-        // Filter out past events ONLY on home page (when limit is specified)
-        let finalList = filtered;
-        if (limit) {
-          const now = new Date();
-          finalList = filtered.filter((ev: any) => {
-            const eventDate = ev.end_date || ev.date || ev.start_date;
-            if (!eventDate) return true; // Keep events without dates
-            return new Date(eventDate) >= now;
-          });
-        }
-
-        // Apply limit if specified (mode home)
-        const finalEvents = limit ? finalList.slice(0, limit) : finalList;
-
-        setEvents(finalEvents);
-        setPagination(paginationData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
+    // Filter by search query
+    if (q && typeof q === "string" && q.trim()) {
+      const needle = q.trim().toLowerCase();
+      filtered = filtered.filter((ev: any) => {
+        const title = String(ev.title || ev.name || "").toLowerCase();
+        const desc = String(ev.description || "").toLowerCase();
+        const loc = String(ev.location || "").toLowerCase();
+        const tags = Array.isArray(ev.tags)
+          ? ev.tags
+              .map((t: any) => String(t))
+              .join(" ")
+              .toLowerCase()
+          : "";
+        return (
+          title.includes(needle) ||
+          desc.includes(needle) ||
+          loc.includes(needle) ||
+          tags.includes(needle)
+        );
       });
-  }, [q, tag, limit, currentPage, token]);
+    }
 
-  if (loading) return <div>Chargement des événements...</div>;
-  if (error) return <div className="text-red-500">Erreur : {error}</div>;
+    // Filter by tag
+    if (tag && typeof tag === "string" && tag.trim()) {
+      const tagNeedle = tag.trim().toLowerCase();
+      filtered = filtered.filter((ev: any) => {
+        if (!Array.isArray(ev.tags)) return false;
+        return ev.tags.some((t: any) => {
+          const eventTag = String(t).toLowerCase().trim();
+          return (
+            eventTag === tagNeedle ||
+            eventTag.includes(tagNeedle) ||
+            tagNeedle.includes(eventTag)
+          );
+        });
+      });
+      // Disable pagination when filtering by tag
+      paginationData = null;
+    }
+
+    // Filter out past events ONLY on home page (when limit is specified)
+    let finalList = filtered;
+    if (limit) {
+      const now = new Date();
+      finalList = filtered.filter((ev: any) => {
+        const eventDate = ev.end_date || ev.date || ev.start_date;
+        if (!eventDate) return true;
+        return new Date(eventDate) >= now;
+      });
+    }
+
+    // Client-side pagination when no tag filter
+    if (!limit && !tag && paginationData) {
+      const pageSize = 9;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      finalList = finalList.slice(start, end);
+      // Update pagination to reflect client-side pagination
+      paginationData = {
+        page: currentPage,
+        limit: pageSize,
+        total: filtered.length,
+        pages: Math.ceil(filtered.length / pageSize),
+      };
+    } else if (!limit && tag) {
+      // When filtering by tag, disable pagination
+      paginationData = null;
+    }
+
+    // Apply limit if specified (mode home)
+    const finalEvents = limit ? finalList.slice(0, limit) : finalList;
+
+    return { events: finalEvents, pagination: paginationData };
+  }, [data, q, tag, limit, currentPage]);
+
+  if (isLoading) return <div>Chargement des événements...</div>;
+  if (error)
+    return <div className="text-red-500">Erreur : {error.message}</div>;
 
   return (
     <>
@@ -169,10 +171,12 @@ export default function EventsList({ limit }: EventsListProps) {
           const end = ev.end_date;
           const startStr = start ? new Date(start).toLocaleDateString() : "";
           const endStr = end ? new Date(end).toLocaleDateString() : "";
-          const when = endStr && startStr ? `${startStr} – ${endStr}` : startStr;
+          const when =
+            endStr && startStr ? `${startStr} – ${endStr}` : startStr;
 
           const tagImage = getImageForTags(ev.tags);
-          const imageUrl = tagImage || ev.image_url || ev.image || ev.photo || "/event.png";
+          const imageUrl =
+            tagImage || ev.image_url || ev.image || ev.photo || "/event.png";
 
           return (
             <a
