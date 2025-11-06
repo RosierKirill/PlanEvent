@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { TemporalPolyfillLoader } from "./temporal-polyfill-loader";
 import "@/app/calendar-scoped.css";
 import "@/app/calendar-theme.css";
+import * as React from "react";
+import { TemporalPolyfillLoader } from "./temporal-polyfill-loader";
 
 interface Event {
   id: number;
@@ -129,7 +129,6 @@ function UserEventsCalendarInner() {
             }))
           : [];
 
-        console.log("Fetched events:", transformedEvents);
         setEvents(transformedEvents);
         setLoading(false);
       })
@@ -138,8 +137,6 @@ function UserEventsCalendarInner() {
         setLoading(false);
       });
   }, [CalendarComponent]);
-
-  console.log("Rendering calendar with events:", events);
 
   if (!CalendarComponent || loading) {
     return (

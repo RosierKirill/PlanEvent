@@ -45,14 +45,12 @@ export default function UsersAdminPage() {
         authorization: `Bearer ${token}`,
       };
       const payload = { name: u.name, email: u.email, role: u.role };
-      console.log("Sending update:", payload);
       const res = await fetch(`/api/users/${u.id}`, {
         method: "PATCH",
         headers,
         body: JSON.stringify(payload),
       });
       const responseText = await res.text();
-      console.log("Response status:", res.status, "Body:", responseText);
       if (!res.ok) throw new Error(responseText || `Erreur ${res.status}`);
       alert("Utilisateur mis à jour avec succès");
     } catch (e: any) {

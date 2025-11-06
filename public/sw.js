@@ -1,17 +1,11 @@
 // Service Worker pour Plan'Event PWA
-const CACHE_NAME = 'planevent-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-];
+const CACHE_NAME = "planevent-v1";
+const urlsToCache = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
 // Installation du service worker
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Cache ouvert');
       return cache.addAll(urlsToCache);
     })
   );
@@ -20,13 +14,12 @@ self.addEventListener('install', (event) => {
 });
 
 // Activation du service worker
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Suppression de l\'ancien cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -38,7 +31,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Interception des requêtes
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   event.respondWith(
     // Stratégie Network First : essayer le réseau d'abord, puis le cache
     fetch(event.request)
@@ -61,12 +54,12 @@ self.addEventListener('fetch', (event) => {
           }
 
           // Si pas dans le cache, retourner une page d'erreur simple
-          return new Response('Contenu non disponible hors ligne', {
+          return new Response("Contenu non disponible hors ligne", {
             status: 503,
-            statusText: 'Service Unavailable',
+            statusText: "Service Unavailable",
             headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
+              "Content-Type": "text/plain",
+            }),
           });
         });
       })

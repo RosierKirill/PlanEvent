@@ -38,14 +38,7 @@ export default function CalendarWrapper({ events }: CalendarWrapperProps) {
 
     const { Temporal } = window as any;
 
-    console.log("Raw events:", events);
-
     const mappedEvents = events.map((event) => {
-      console.log("Processing event:", event.name, {
-        startDate: event.startDate,
-        endDate: event.endDate,
-      });
-
       // Parse ISO date strings with timezone
       const startDate = new Date(event.startDate);
       const endDate = new Date(event.endDate);
@@ -82,7 +75,6 @@ export default function CalendarWrapper({ events }: CalendarWrapperProps) {
           end: endPlusOne,
           calendarId: "user-events",
         };
-        console.log("Created multi-day event:", calEvent);
         return calEvent;
       } else {
         // For same-day timed events, use ZonedDateTime
@@ -99,12 +91,10 @@ export default function CalendarWrapper({ events }: CalendarWrapperProps) {
           end: endInstant.toZonedDateTimeISO(timeZone),
           calendarId: "user-events",
         };
-        console.log("Created timed event:", calEvent);
         return calEvent;
       }
     });
 
-    console.log("Final calendar events:", mappedEvents);
     return mappedEvents;
   }, [events, isReady]);
 
@@ -153,7 +143,6 @@ export default function CalendarWrapper({ events }: CalendarWrapperProps) {
   // Update events when they change
   React.useEffect(() => {
     if (calendarApp && calendarEvents.length > 0) {
-      console.log("Setting calendar events:", calendarEvents);
       calendarApp.events.set(calendarEvents);
     }
   }, [calendarApp, calendarEvents]);
