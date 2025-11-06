@@ -8,7 +8,7 @@ import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 
 // Fetcher function for SWR
 async function fetchRooms(url: string, token: string | null) {
@@ -53,22 +53,40 @@ function RoomCardWithMembership({
   onLeave,
   joiningId,
   filterByMembership,
+  optimisticMembership,
 }: {
   room: any;
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
   joiningId: string | null;
   filterByMembership?: boolean;
+  optimisticMembership?: Record<string, boolean>;
 }) {
   const { token, isAuthenticated, user } = useAuth();
-  const { isMember, isLoading } = useRoomMembership(
+  const { isMember: fetchedIsMember, isLoading } = useRoomMembership(
     room.id,
     isAuthenticated ? token : null,
     isAuthenticated && user?.id ? user.id : null
   );
 
-  // Don't show card while membership is loading
-  if (isLoading) {
+  // Use optimistic update if available, otherwise use fetched value
+  const hasOptimisticUpdate = optimisticMembership?.[room.id] !== undefined;
+  const isMember = hasOptimisticUpdate
+    ? optimisticMembership[room.id]
+    : fetchedIsMember;
+
+  // Debug logs
+  console.log(`Room ${room.id}:`, {
+    hasOptimisticUpdate,
+    optimisticValue: optimisticMembership?.[room.id],
+    fetchedIsMember,
+    finalIsMember: isMember,
+    filterByMembership,
+    shouldShow: filterByMembership === true ? isMember : !isMember,
+  });
+
+  // Don't show card while membership is loading (unless we have optimistic update)
+  if (isLoading && !hasOptimisticUpdate) {
     return null;
   }
 
@@ -104,6 +122,7 @@ function RoomSection({
   onJoin,
   onLeave,
   joiningId,
+  optimisticMembership,
 }: {
   title: string;
   rooms: any[];
@@ -111,6 +130,7 @@ function RoomSection({
   onJoin: (id: string) => void;
   onLeave: (id: string) => void;
   joiningId: string | null;
+  optimisticMembership?: Record<string, boolean>;
 }) {
   return (
     <div>
@@ -124,6 +144,7 @@ function RoomSection({
             onLeave={onLeave}
             joiningId={joiningId}
             filterByMembership={filterByMembership}
+            optimisticMembership={optimisticMembership}
           />
         ))}
       </div>
@@ -162,6 +183,10 @@ export function RoomGrid() {
   }, [rooms, q]);
 
   const [joiningId, setJoiningId] = React.useState<string | null>(null);
+  const [membershipUpdates, setMembershipUpdates] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [refreshKey, setRefreshKey] = React.useState(0);
 
   const onJoin = async (roomId: string) => {
     if (!isAuthenticated || !token || !user?.id) {
@@ -170,6 +195,20 @@ export function RoomGrid() {
       return;
     }
     setJoiningId(roomId);
+
+    // Optimistic update BEFORE API call: mark as member locally immediately
+    console.log(
+      "onJoin: Setting optimistic update for room",
+      roomId,
+      "to true"
+    );
+    setMembershipUpdates((prev) => {
+      const next = { ...prev, [roomId]: true };
+      console.log("onJoin: New membershipUpdates state:", next);
+      return next;
+    });
+    setRefreshKey((prev) => prev + 1); // Force re-render
+
     try {
       const res = await fetch("/api/room-members", {
         method: "POST",
@@ -181,21 +220,39 @@ export function RoomGrid() {
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // Invalidate membership cache for this room
-      mutate();
+      // Invalidate both rooms list and membership cache for this specific room
+      await Promise.all([
+        mutate(),
+        globalMutate(
+          [`/api/room-members/check/${roomId}`, token, user.id],
+          true,
+          { revalidate: true }
+        ),
+      ]);
     } catch (e: any) {
       setErrorMessage(e?.message || "Erreur lors de la jonction au groupe");
+      // Revert optimistic update on error
+      setMembershipUpdates((prev) => {
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
+      });
     } finally {
       setJoiningId(null);
     }
   };
 
   const onLeave = async (roomId: string) => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated || !token || !user?.id) {
       setErrorMessage("Vous devez être connecté pour quitter un groupe");
       return;
     }
     setJoiningId(roomId);
+
+    // Optimistic update BEFORE API call: mark as non-member locally immediately
+    setMembershipUpdates((prev) => ({ ...prev, [roomId]: false }));
+    setRefreshKey((prev) => prev + 1); // Force re-render
+
     try {
       const res = await fetch(`/api/room-members/leave/${roomId}`, {
         method: "DELETE",
@@ -203,10 +260,23 @@ export function RoomGrid() {
       });
       if (!res.ok) throw new Error(await res.text());
 
-      // Invalidate membership cache for this room
-      mutate();
+      // Invalidate both rooms list and membership cache for this specific room
+      await Promise.all([
+        mutate(),
+        globalMutate(
+          [`/api/room-members/check/${roomId}`, token, user.id],
+          false,
+          { revalidate: true }
+        ),
+      ]);
     } catch (e: any) {
       setErrorMessage(e?.message || "Erreur lors de la sortie du groupe");
+      // Revert optimistic update on error
+      setMembershipUpdates((prev) => {
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
+      });
     } finally {
       setJoiningId(null);
     }
@@ -301,22 +371,26 @@ export function RoomGrid() {
           <>
             {/* Mes Groupes - Only show rooms where user is a member */}
             <RoomSection
+              key={`my-${refreshKey}`}
               title="Mes Groupes"
               rooms={filteredRooms}
               filterByMembership={true}
               onJoin={onJoin}
               onLeave={onLeave}
               joiningId={joiningId}
+              optimisticMembership={membershipUpdates}
             />
 
             {/* Autres Groupes - Only show rooms where user is NOT a member */}
             <RoomSection
+              key={`other-${refreshKey}`}
               title="Autres Groupes"
               rooms={filteredRooms}
               filterByMembership={false}
               onJoin={onJoin}
               onLeave={onLeave}
               joiningId={joiningId}
+              optimisticMembership={membershipUpdates}
             />
           </>
         ) : (
