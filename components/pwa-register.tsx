@@ -12,15 +12,13 @@ export function PWARegister() {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          console.log("Service Worker enregistré avec succès:", registration);
-
           // Vérifier les mises à jour toutes les heures
           setInterval(() => {
             registration.update();
           }, 60 * 60 * 1000);
         })
         .catch((error) => {
-          console.log("Échec de l'enregistrement du Service Worker:", error);
+          console.warn("Échec de l'enregistrement du Service Worker:", error);
         });
     }
   }, []);

@@ -1,5 +1,7 @@
 "use client";
 
+import "@/app/calendar-scoped.css";
+import "@/app/calendar-theme.css";
 import * as React from "react";
 import { TemporalPolyfillLoader } from "./temporal-polyfill-loader";
 
@@ -127,7 +129,6 @@ function UserEventsCalendarInner() {
             }))
           : [];
 
-        console.log("Fetched events:", transformedEvents);
         setEvents(transformedEvents);
         setLoading(false);
       })
@@ -136,8 +137,6 @@ function UserEventsCalendarInner() {
         setLoading(false);
       });
   }, [CalendarComponent]);
-
-  console.log("Rendering calendar with events:", events);
 
   if (!CalendarComponent || loading) {
     return (
@@ -165,5 +164,9 @@ function UserEventsCalendarInner() {
     );
   }
 
-  return <CalendarComponent events={events} />;
+  return (
+    <div className="calendar-container">
+      <CalendarComponent events={events} />
+    </div>
+  );
 }
