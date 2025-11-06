@@ -1,4 +1,3 @@
-import "temporal-polyfill/global";
 import { Header } from "@/components/header";
 import { Navigation } from "@/components/navigation";
 import { PWARegister } from "@/components/pwa-register";
@@ -6,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
+import "temporal-polyfill/global";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/192.png", sizes: "192x192", type: "image/png" },
+      { url: "/512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/180.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

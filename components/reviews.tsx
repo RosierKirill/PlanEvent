@@ -28,7 +28,7 @@ export const reviews = [
   {
     name: "Emma Petit",
     username: "@emmapetit",
-    body: "Super pratique pour réserver des salles pour nos soirées étudiantes. Tout est centralisé au même endroit.",
+    body: "Super pratique pour créer des groupes pour nos soirées étudiantes. Tout est centralisé au même endroit.",
     img: "https://avatar.vercel.sh/emma",
   },
   {

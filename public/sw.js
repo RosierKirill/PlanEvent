@@ -1,6 +1,6 @@
 // Service Worker pour Plan'Event PWA
 const CACHE_NAME = "planevent-v1";
-const urlsToCache = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
+const urlsToCache = ["/", "/manifest.json", "/192.png", "/512.png"];
 
 // Installation du service worker
 self.addEventListener("install", (event) => {
