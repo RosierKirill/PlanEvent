@@ -1,4 +1,5 @@
 "use client";
+import { EventCardSkeleton } from "@/components/event-card-skeleton";
 import { Pagination } from "@/components/pagination";
 import { useAuthToken } from "@/hooks/use-auth";
 import { getImageForTags } from "@/lib/tag-images";
@@ -158,7 +159,15 @@ export default function EventsList({ limit }: EventsListProps) {
     return { events: finalEvents, pagination: paginationData };
   }, [data, q, tag, limit, currentPage]);
 
-  if (isLoading) return <div>Chargement des événements...</div>;
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {Array.from({ length: limit || 6 }).map((_, i) => (
+          <EventCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
   if (error)
     return <div className="text-red-500">Erreur : {error.message}</div>;
 

@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoomMembership } from "@/hooks/use-room-membership";
 import { Loader2, LogIn, Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 
 interface Room {
   id: string;
@@ -40,10 +42,97 @@ interface EventRoomsDialogProps {
   children: React.ReactNode;
 }
 
+// Fetcher function for SWR
+async function fetchEventRooms(url: string): Promise<Room[]> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Erreur lors du chargement des groupes");
+  const data: RoomsResponse = await response.json();
+  return data.items || [];
+}
+
+// Component to render a room card with lazy-loaded membership status
+function RoomCardWithMembership({
+  room,
+  joiningRoomId,
+  onJoin,
+  onLeave,
+}: {
+  room: Room;
+  joiningRoomId: string | null;
+  onJoin: (roomId: string) => void;
+  onLeave: (roomId: string) => void;
+}) {
+  const { token, isAuthenticated, user } = useAuth();
+  const { isMember, isLoading } = useRoomMembership(
+    room.id,
+    isAuthenticated ? token : null,
+    isAuthenticated ? user?.id ?? null : null
+  );
+
+  return (
+    <Card className="hover:border-primary transition-colors">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Users className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium">{room.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {room.description}
+              </p>
+            </div>
+          </div>
+          {!isAuthenticated ? (
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Se connecter
+              </Link>
+            </Button>
+          ) : isLoading ? (
+            <Button size="sm" variant="outline" disabled>
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </Button>
+          ) : isMember ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => onLeave(room.id)}
+                disabled={joiningRoomId === room.id}
+              >
+                {joiningRoomId === room.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Quitter"
+                )}
+              </Button>
+              <Button size="sm" variant="default" asChild>
+                <Link href={`/rooms/${room.id}`}>Accéder</Link>
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onJoin(room.id)}
+              disabled={joiningRoomId === room.id}
+            >
+              {joiningRoomId === room.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Rejoindre"
+              )}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
   const [open, setOpen] = useState(false);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
   const [newRoomDescription, setNewRoomDescription] = useState("");
@@ -51,76 +140,20 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const { token, isAuthenticated, user } = useAuth();
 
-  const fetchRooms = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/rooms/event/${eventId}`);
-      if (!response.ok)
-        throw new Error("Erreur lors du chargement des groupes");
-      const data: RoomsResponse = await response.json();
-
-      // Fetch membership status for each room if user is authenticated
-      if (isAuthenticated && token && user?.id) {
-        const roomsWithMembership = await Promise.all(
-          (data.items || []).map(async (room) => {
-            try {
-              const memberResponse = await fetch(
-                `/api/room-members/check/${room.id}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-
-              if (memberResponse.ok) {
-                try {
-                  const memberData = await memberResponse.json();
-
-                  // Check if current user is in the members list
-                  let isMember = false;
-                  if (memberData.members && Array.isArray(memberData.members)) {
-                    isMember = memberData.members.some((member: any) => {
-                      const memberId = member.user_id || member.id;
-                      return memberId === user.id;
-                    });
-                  } else if (
-                    memberData.is_member !== null &&
-                    memberData.is_member !== undefined
-                  ) {
-                    isMember = memberData.is_member;
-                  }
-
-                  return { ...room, isMember };
-                } catch (e) {
-                  console.error(
-                    `Error parsing membership data for room ${room.id}:`,
-                    e
-                  );
-                  return { ...room, isMember: false };
-                }
-              }
-            } catch (err) {
-              console.error(
-                `Error checking membership for room ${room.id}:`,
-                err
-              );
-            }
-            return { ...room, isMember: false };
-          })
-        );
-        setRooms(roomsWithMembership);
-      } else {
-        setRooms(data.items || []);
-      }
-    } catch (err) {
-      setError("Impossible de charger les groupes");
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Use SWR to fetch and cache rooms for this event
+  const {
+    data: rooms = [],
+    error: fetchError,
+    isLoading,
+    mutate,
+  } = useSWR<Room[]>(
+    open ? `/api/rooms/event/${eventId}` : null,
+    fetchEventRooms,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // Cache for 30 seconds
     }
-  };
+  );
 
   const createRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -153,7 +186,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
 
       setNewRoomName("");
       setNewRoomDescription("");
-      await fetchRooms();
+      mutate(); // Revalidate rooms list
     } catch (err: any) {
       setError(err.message || "Impossible de créer le groupe");
       console.error(err);
@@ -206,7 +239,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
         throw new Error(errorMessage);
       }
 
-      await fetchRooms();
+      mutate(); // Revalidate rooms list and membership
     } catch (err: any) {
       setError(err.message || "Impossible de rejoindre le groupe");
       console.error("Join room error:", err);
@@ -249,7 +282,7 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
         throw new Error(errorMessage);
       }
 
-      await fetchRooms();
+      mutate(); // Revalidate rooms list and membership
     } catch (err: any) {
       setError(err.message || "Impossible de quitter le groupe");
       console.error("Leave room error:", err);
@@ -257,12 +290,6 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
       setJoiningRoomId(null);
     }
   };
-
-  useEffect(() => {
-    if (open) {
-      fetchRooms();
-    }
-  }, [open, eventId]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -339,9 +366,13 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
             <h3 className="text-m font-medium mb-3">
               Groupes existants ({rooms.length})
             </h3>
-            {loading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : fetchError ? (
+              <div className="text-sm text-destructive text-center py-4">
+                {fetchError.message || "Impossible de charger les groupes"}
               </div>
             ) : error ? (
               <div className="text-sm text-destructive text-center py-4">
@@ -354,63 +385,13 @@ export function EventRoomsDialog({ eventId, children }: EventRoomsDialogProps) {
             ) : (
               <div className="grid gap-3">
                 {rooms.map((room) => (
-                  <Card
+                  <RoomCardWithMembership
                     key={room.id}
-                    className="hover:border-primary transition-colors"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Users className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{room.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {room.description}
-                            </p>
-                          </div>
-                        </div>
-                        {!isAuthenticated ? (
-                          <Button size="sm" variant="outline" asChild>
-                            <Link href="/login">
-                              <LogIn className="mr-2 h-4 w-4" />
-                              Se connecter
-                            </Link>
-                          </Button>
-                        ) : room.isMember ? (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => leaveRoom(room.id)}
-                              disabled={joiningRoomId === room.id}
-                            >
-                              {joiningRoomId === room.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                "Quitter"
-                              )}
-                            </Button>
-                            <Button size="sm" variant="default" asChild>
-                              <Link href={`/rooms/${room.id}`}>Accéder</Link>
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => joinRoom(room.id)}
-                            disabled={joiningRoomId === room.id}
-                          >
-                            {joiningRoomId === room.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              "Rejoindre"
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    room={room}
+                    joiningRoomId={joiningRoomId}
+                    onJoin={joinRoom}
+                    onLeave={leaveRoom}
+                  />
                 ))}
               </div>
             )}

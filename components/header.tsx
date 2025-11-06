@@ -1,5 +1,6 @@
 "use client";
 
+import { HeaderSkeleton } from "@/components/header-skeleton";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ export function Header() {
   }, []);
 
   if (!mounted) {
-    return null;
+    return <HeaderSkeleton />;
   }
 
   return (
