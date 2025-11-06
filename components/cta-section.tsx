@@ -1,13 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { MagneticButton } from "./ui/magnetic-button";
 
 export function CTASection() {
   const router = useRouter();
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsConnected(!!token);
+  }, []);
 
   return (
     <Card className="p-12 text-center bg-linear-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20">
@@ -22,17 +28,18 @@ export function CTASection() {
         </h2>
 
         <p className="text-lg text-muted-foreground">
-          Inscrivez-vous gratuitement et commencez à créer vos groupes,
-          découvrir des événements en quelques clics.
+          {isConnected
+            ? "Découvrez tous les événements disponibles et rejoignez la communauté."
+            : "Inscrivez-vous gratuitement et commencez à créer vos groupes, découvrir des événements en quelques clics."}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
           <MagneticButton
             size="sm"
             className="text-lg p-5 px-6! group"
-            onClick={() => router.push("/register")}
+            onClick={() => router.push(isConnected ? "/events" : "/register")}
           >
-            Créer un compte
+            {isConnected ? "Voir les événements" : "Créer un compte"}
             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </MagneticButton>
         </div>

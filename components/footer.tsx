@@ -14,7 +14,8 @@ export function Footer() {
                 src="/Logo-Icon.svg"
                 alt="Plan'Event Logo"
                 width={24}
-                height={24}
+                height={25}
+                style={{ width: "24px", height: "25px" }}
               />
               <h3 className="text-lg font-bold text-foreground">
                 Plan&apos;Event

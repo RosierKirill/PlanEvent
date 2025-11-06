@@ -73,7 +73,8 @@ export function Header() {
               src="/Logo-Icon.svg"
               alt="Plan'Event Logo"
               width={30}
-              height={30}
+              height={32}
+              style={{ width: "30px", height: "32px" }}
             />
             <span className="text-xl font-bold hidden sm:inline">
               Plan'Event
