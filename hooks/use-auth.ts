@@ -14,23 +14,41 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if we're in the browser
-    if (typeof window !== "undefined") {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
+    // Function to load auth state from localStorage
+    const loadAuthState = () => {
+      if (typeof window !== "undefined") {
+        const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
 
-      setToken(storedToken);
+        setToken(storedToken);
 
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error("Failed to parse user from localStorage", e);
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.error("Failed to parse user from localStorage", e);
+          }
+        } else {
+          setUser(null);
         }
-      }
 
-      setIsLoading(false);
-    }
+        setIsLoading(false);
+      }
+    };
+
+    // Load initial state
+    loadAuthState();
+
+    // Listen for auth state changes
+    const handleAuthChange = () => {
+      loadAuthState();
+    };
+
+    window.addEventListener("auth-state-changed", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("auth-state-changed", handleAuthChange);
+    };
   }, []);
 
   const logout = () => {
