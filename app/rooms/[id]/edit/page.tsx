@@ -1,14 +1,14 @@
 "use client";
 
-import * as React from "react";
-import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useParams, useRouter } from "next/navigation";
+import * as React from "react";
 
 export default function EditRoomPage() {
   const router = useRouter();
   const params = useParams();
   const roomId = params.id as string;
-  const { token, user, isAuthenticated } = useAuth();
+  const { token, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -20,6 +20,9 @@ export default function EditRoomPage() {
   });
 
   React.useEffect(() => {
+    // Ne pas faire la requête tant que l'auth n'est pas chargée
+    if (authLoading) return;
+
     (async () => {
       try {
         const res = await fetch(`/api/rooms/${roomId}`, {
@@ -41,12 +44,14 @@ export default function EditRoomPage() {
         setLoading(false);
       }
     })();
-  }, [roomId, token, user?.id]);
+  }, [roomId, token, user?.id, authLoading]);
 
   if (!isAuthenticated) {
     return (
       <main className="container mx-auto px-4 py-8">
-        <div className="text-sm text-muted-foreground">Veuillez vous connecter.</div>
+        <div className="text-sm text-muted-foreground">
+          Veuillez vous connecter.
+        </div>
       </main>
     );
   }
@@ -54,7 +59,9 @@ export default function EditRoomPage() {
   if (!isOwner && !loading) {
     return (
       <main className="container mx-auto px-4 py-8">
-        <div className="text-sm text-muted-foreground">Accès réservé au propriétaire du groupe.</div>
+        <div className="text-sm text-muted-foreground">
+          Accès réservé au propriétaire du groupe.
+        </div>
       </main>
     );
   }
@@ -64,7 +71,9 @@ export default function EditRoomPage() {
     setSaving(true);
     setError(null);
     try {
-      const headers: Record<string, string> = { "content-type": "application/json" };
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+      };
       if (token) headers["authorization"] = `Bearer ${token}`;
       const payload: any = {
         name: form.name,
