@@ -20,9 +20,7 @@ export function RoomGrid() {
 
   React.useEffect(() => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    const url = `/api/rooms${params.toString() ? `?${params.toString()}` : ""}`;
+    const url = `/api/rooms`;
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const headers: Record<string, string> = {};
@@ -55,6 +53,18 @@ export function RoomGrid() {
 
         if (!Array.isArray(list)) {
           throw new Error("Format de réponse inattendu pour les groupes");
+        }
+
+        // Client-side search filter
+        if (q && q.trim()) {
+          const searchTerm = q.trim().toLowerCase();
+          list = list.filter((room: any) => {
+            const name = (room.name || "").toLowerCase();
+            const description = (room.description || "").toLowerCase();
+            return (
+              name.includes(searchTerm) || description.includes(searchTerm)
+            );
+          });
         }
 
         if (isAuthenticated && token && user?.id) {
@@ -145,7 +155,27 @@ export function RoomGrid() {
 
   if (loading) return <div>Chargement des groupes...</div>;
   if (error) return <div className="text-red-500">Erreur : {error}</div>;
-  if (rooms.length === 0) return <div>Aucune salle trouvée.</div>;
+  if (rooms.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        {q ? (
+          <>
+            Aucun groupe trouvé pour "{q}".
+            <br />
+            <span className="text-sm">
+              Essayez avec d'autres mots-clés ou{" "}
+              <Link href="/rooms" className="text-primary hover:underline">
+                voir tous les groupes
+              </Link>
+              .
+            </span>
+          </>
+        ) : (
+          "Aucun groupe disponible."
+        )}
+      </div>
+    );
+  }
 
   // Séparer les groupes en deux catégories
   const myRooms = rooms.filter((room) => room.isMember === true);
