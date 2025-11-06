@@ -2,49 +2,59 @@
 
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAuthToken } from "@/hooks/use-auth";
-import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function EditRoomPage() {
   const router = useRouter();
   const params = useParams();
   const roomId = params.id as string;
-  const token = useAuthToken();
-  const isAdmin = useIsAdmin();
+  const { token, user, isAuthenticated } = useAuth();
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isOwner, setIsOwner] = React.useState<boolean>(false);
 
   const [form, setForm] = React.useState({
     name: "",
-    event_id: "",
     description: "",
   });
 
   React.useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/rooms/${roomId}`);
+        const res = await fetch(`/api/rooms/${roomId}`, {
+          headers: token ? { authorization: `Bearer ${token}` } : {},
+        });
         const txt = await res.text();
         if (!res.ok) throw new Error(txt || `Erreur ${res.status}`);
         const data = JSON.parse(txt);
         setForm({
           name: data.name || "",
-          event_id: data.event_id || "",
           description: data.description || "",
         });
+        const ownerId = String(data.user_id || data.owner_id || "");
+        const meId = String(user?.id || "");
+        setIsOwner(!!meId && !!ownerId && meId === ownerId);
         setLoading(false);
       } catch (e: any) {
         setError(e?.message || "Chargement impossible");
         setLoading(false);
       }
     })();
-  }, [roomId]);
+  }, [roomId, token, user?.id]);
 
-  if (!isAdmin) {
+  if (!isAuthenticated) {
     return (
       <main className="container mx-auto px-4 py-8">
-        <div className="text-sm text-muted-foreground">Accès réservé à l'admin.</div>
+        <div className="text-sm text-muted-foreground">Veuillez vous connecter.</div>
+      </main>
+    );
+  }
+
+  if (!isOwner && !loading) {
+    return (
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-sm text-muted-foreground">Accès réservé au propriétaire du groupe.</div>
       </main>
     );
   }
@@ -58,7 +68,6 @@ export default function EditRoomPage() {
       if (token) headers["authorization"] = `Bearer ${token}`;
       const payload: any = {
         name: form.name,
-        event_id: form.event_id,
         description: form.description || undefined,
       };
       const res = await fetch(`/api/rooms/${roomId}`, {
@@ -93,15 +102,6 @@ export default function EditRoomPage() {
           />
         </div>
         <div>
-          <label className="block text-sm">Événement (ID)</label>
-          <input
-            className="mt-1 w-full border rounded-md px-3 py-2"
-            value={form.event_id}
-            onChange={(e) => setForm({ ...form, event_id: e.target.value })}
-            required
-          />
-        </div>
-        <div>
           <label className="block text-sm">Description</label>
           <textarea
             className="mt-1 w-full border rounded-md px-3 py-2"
@@ -131,4 +131,3 @@ export default function EditRoomPage() {
     </main>
   );
 }
-

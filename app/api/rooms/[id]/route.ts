@@ -10,7 +10,7 @@ export async function GET(
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
-    const auth = req.headers.get("authorization");
+    const auth = req.headers.get("authorization") || req.headers.get("Authorization");
 
     const headers: Record<string, string> = {
       accept: "application/json",
@@ -52,12 +52,43 @@ export async function PATCH(req: NextRequest, { params }: { params: any }) {
     const base = String(RAW_BASE).replace(/\/$/, "");
     if (!base) return NextResponse.json({ error: "API_BASE manquant" }, { status: 501 });
 
-    const auth = req.headers.get("authorization");
+    const auth = req.headers.get("authorization") || req.headers.get("Authorization");
     const headers: Record<string, string> = {
       "content-type": req.headers.get("content-type") || "application/json",
     };
     if (auth) headers["authorization"] = auth;
     const body = await req.text();
+
+    // Owner enforcement: Only the room owner can update
+    try {
+      // Fetch current user
+      const meRes = await fetch(`${base}/users/me`, {
+        headers: auth ? { authorization: auth, accept: "application/json" } : { accept: "application/json" },
+      });
+      if (!meRes.ok) {
+        const txt = await meRes.text();
+        return new Response(txt || "Non autorisé", { status: meRes.status });
+      }
+      const me = await meRes.json().catch(() => ({} as any));
+
+      // Fetch room to check owner
+      const roomRes = await fetch(`${base}/rooms/${encodeURIComponent(id)}`, {
+        headers: auth ? { authorization: auth, accept: "application/json" } : { accept: "application/json" },
+      });
+      if (!roomRes.ok) {
+        const txt = await roomRes.text();
+        return new Response(txt || "Groupe introuvable", { status: roomRes.status });
+      }
+      const room = await roomRes.json().catch(() => ({} as any));
+
+      const meId = String(me?.id || "");
+      const ownerId = String(room?.user_id || room?.owner_id || "");
+      if (!meId || !ownerId || meId !== ownerId) {
+        return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      }
+    } catch (checkErr: any) {
+      return NextResponse.json({ error: String(checkErr?.message || checkErr || "Vérification impossible") }, { status: 500 });
+    }
 
     let res = await fetch(`${base}/rooms/${encodeURIComponent(id)}`, {
       method: "PATCH",
@@ -87,7 +118,7 @@ export async function DELETE(req: NextRequest, { params }: { params: any }) {
     const base = String(RAW_BASE).replace(/\/$/, "");
     if (!base) return NextResponse.json({ error: "API_BASE manquant" }, { status: 501 });
 
-    const auth = req.headers.get("authorization");
+    const auth = req.headers.get("authorization") || req.headers.get("Authorization");
     const headers: Record<string, string> = {};
     if (auth) headers["authorization"] = auth;
 

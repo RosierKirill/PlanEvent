@@ -260,8 +260,17 @@ export default function RoomPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-3xl">{room.name}</CardTitle>
-              <CardDescription>{room.description}</CardDescription>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-3xl">{room.name}</CardTitle>
+                  <CardDescription>{room.description}</CardDescription>
+                </div>
+                {user?.id === room.user_id && (
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/rooms/${roomId}/edit`}>Modifier</Link>
+                  </Button>
+                )}
+              </div>
             </CardHeader>
           </Card>
 
