@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { TemporalPolyfillLoader } from "./temporal-polyfill-loader";
+import "@/app/calendar-scoped.css";
+import "@/app/calendar-theme.css";
 
 interface Event {
   id: number;
@@ -165,5 +167,9 @@ function UserEventsCalendarInner() {
     );
   }
 
-  return <CalendarComponent events={events} />;
+  return (
+    <div className="calendar-container">
+      <CalendarComponent events={events} />
+    </div>
+  );
 }

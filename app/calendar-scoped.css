@@ -1,0 +1,28 @@
+/*
+ * Calendar styles with radius override fix
+ * The @schedule-x/theme-shadcn package sets --radius: 0.5rem globally,
+ * which overrides our app's --radius: 1.4rem setting.
+ * We import it here and immediately restore our app's radius.
+ */
+
+@import "@schedule-x/theme-shadcn/dist/index.css";
+
+/*
+ * Restore app's default --radius after schedule-x import
+ * This ensures the rest of the app uses the correct border radius
+ */
+:root {
+  --radius: 1.4rem !important;
+}
+
+.dark {
+  --radius: 1.4rem !important;
+}
+
+/*
+ * Let the calendar use schedule-x's radius
+ * Override --radius only within the calendar container
+ */
+.calendar-container {
+  --radius: 0.5rem;
+}

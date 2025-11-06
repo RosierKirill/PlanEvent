@@ -1,202 +1,203 @@
 /* Schedule-X Calendar Custom Styles */
-.sx-react-calendar-wrapper {
+/* Scoped to calendar container to prevent affecting global styles */
+.calendar-container .sx-react-calendar-wrapper {
   width: 100%;
   height: 700px;
 }
 
-/* Dark mode overrides - using html.dark selector for maximum specificity */
-html.dark .sx-react-calendar-wrapper,
-html.dark .sx__month-grid,
-html.dark .sx__month-grid-wrapper,
-html.dark .sx__month-grid-week,
-html.dark .sx__month-grid-day,
-html.dark .sx__calendar-wrapper.is-shadcn,
-html.dark .sx__calendar {
+/* Dark mode overrides - scoped to calendar container */
+html.dark .calendar-container .sx-react-calendar-wrapper,
+html.dark .calendar-container .sx__month-grid,
+html.dark .calendar-container .sx__month-grid-wrapper,
+html.dark .calendar-container .sx__month-grid-week,
+html.dark .calendar-container .sx__month-grid-day,
+html.dark .calendar-container .sx__calendar-wrapper.is-shadcn,
+html.dark .calendar-container .sx__calendar {
   background-color: hsl(var(--background)) !important;
 }
 
-html.dark .sx__month-grid-day {
+html.dark .calendar-container .sx__month-grid-day {
   border-color: hsl(var(--border)) !important;
 }
 
-html.dark .sx__month-grid-day.is-today {
+html.dark .calendar-container .sx__month-grid-day.is-today {
   background-color: hsl(var(--accent)) !important;
 }
 
-html.dark .sx__date-grid-day,
-html.dark .sx__day-name,
-html.dark .sx__month-grid-day__header-date,
-html.dark .sx__month-grid-day__header-day-name {
+html.dark .calendar-container .sx__date-grid-day,
+html.dark .calendar-container .sx__day-name,
+html.dark .calendar-container .sx__month-grid-day__header-date,
+html.dark .calendar-container .sx__month-grid-day__header-day-name {
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx__month-grid-cell {
+html.dark .calendar-container .sx__month-grid-cell {
   border-color: hsl(var(--border)) !important;
 }
 
-html.dark .sx__week-grid,
-html.dark .sx__day-grid,
-html.dark .sx__week-wrapper {
+html.dark .calendar-container .sx__week-grid,
+html.dark .calendar-container .sx__day-grid,
+html.dark .calendar-container .sx__week-wrapper {
   background-color: hsl(var(--background)) !important;
 }
 
-html.dark .sx__time-grid-day,
-html.dark .sx__time-grid-hour {
+html.dark .calendar-container .sx__time-grid-day,
+html.dark .calendar-container .sx__time-grid-hour {
   border-color: hsl(var(--border)) !important;
   background-color: hsl(var(--background)) !important;
 }
 
-html.dark .sx__view-header,
-html.dark .sx__header-content {
+html.dark .calendar-container .sx__view-header,
+html.dark .calendar-container .sx__header-content {
   background-color: hsl(var(--background)) !important;
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx__calendar-header,
-html.dark .sx__calendar-header-content,
-html.dark .sx__range-picker {
-  background-color: hsl(var(--background)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
-}
-
-html.dark .sx__month-agenda-day,
-html.dark .sx__month-agenda-wrapper {
+html.dark .calendar-container .sx__calendar-header,
+html.dark .calendar-container .sx__calendar-header-content,
+html.dark .calendar-container .sx__range-picker {
   background-color: hsl(var(--background)) !important;
   border-color: hsl(var(--border)) !important;
-}
-
-html.dark .sx__month-agenda-day__header {
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx__month-grid-event {
+html.dark .calendar-container .sx__month-agenda-day,
+html.dark .calendar-container .sx__month-agenda-wrapper {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+html.dark .calendar-container .sx__month-agenda-day__header {
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx-react-calendar-wrapper button,
-html.dark .sx__button {
+html.dark .calendar-container .sx__month-grid-event {
+  color: hsl(var(--foreground)) !important;
+}
+
+html.dark .calendar-container .sx-react-calendar-wrapper button,
+html.dark .calendar-container .sx__button {
   color: hsl(var(--foreground)) !important;
   background-color: transparent !important;
 }
 
-html.dark .sx__button:hover {
+html.dark .calendar-container .sx__button:hover {
   background-color: hsl(var(--accent)) !important;
 }
 
 /* Force all text inside calendar to use foreground color in dark mode */
-html.dark .sx-react-calendar-wrapper * {
+html.dark .calendar-container .sx-react-calendar-wrapper * {
   color: hsl(var(--foreground));
 }
 
 /* Override specific text elements */
-html.dark .sx__event-title,
-html.dark .sx__date-picker-date {
+html.dark .calendar-container .sx__event-title,
+html.dark .calendar-container .sx__date-picker-date {
   color: hsl(var(--foreground)) !important;
 }
 
 /* Schedule-X Calendar colors for user events */
-.sx__event.sx__user-events-event {
+.calendar-container .sx__event.sx__user-events-event {
   background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
   border-color: hsl(var(--primary)) !important;
 }
 
-.sx__chevron {
+.calendar-container .sx__chevron {
   border-color: hsl(var(--foreground)) !important;
 }
 
-.sx__view-selection-label {
+.calendar-container .sx__view-selection-label {
   display: none !important;
 }
 
-.sx__month-grid-event-title {
+.calendar-container .sx__month-grid-event-title {
   color: oklch(0.2223 0.006 271.139) !important;
 }
 
-.sx__date-input-wrapper {
+.calendar-container .sx__date-input-wrapper {
   display: none !important;
 }
 
-.sx__view-selection-item {
+.calendar-container .sx__view-selection-item {
   color: hsl(var(--foreground)) !important;
 }
 
-.sx__view-selection-selected-item.sx__ripple:hover {
+.calendar-container .sx__view-selection-selected-item.sx__ripple:hover {
   background-color: hsl(var(--background)) !important;
 }
 
-.sx__view-selection-item:hover {
+.calendar-container .sx__view-selection-item:hover {
   background-color: hsl(var(--accent)) !important;
 }
 
-.sx__view-selection-item {
+.calendar-container .sx__view-selection-item {
   background-color: hsl(var(--card)) !important;
 }
 
 /* View selection dropdown - light and dark mode */
-.sx__view-selection-items {
+.calendar-container .sx__view-selection-items {
   background-color: white !important;
   border: 1px solid hsl(var(--border)) !important;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
 }
 
 /* Dark mode for view selection dropdown */
-html.dark .sx__view-selection-items {
+html.dark .calendar-container .sx__view-selection-items {
   background-color: hsl(var(--background)) !important;
   border: 1px solid hsl(var(--border)) !important;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3) !important;
 }
 
-html.dark .sx__view-selection-selected-item {
+html.dark .calendar-container .sx__view-selection-selected-item {
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;
   border-color: hsl(var(--border)) !important;
 }
 
 /* Week header - light and dark mode */
-.sx__week-header-content {
+.calendar-container .sx__week-header-content {
   background-color: hsl(var(--background)) !important;
 }
 
 /* Week and day view dark mode */
-html.dark .sx__week-header-content,
-html.dark .sx__week-grid__date-axis,
-html.dark .sx__date-grid {
+html.dark .calendar-container .sx__week-header-content,
+html.dark .calendar-container .sx__week-grid__date-axis,
+html.dark .calendar-container .sx__date-grid {
   background-color: hsl(var(--background)) !important;
 }
 
-html.dark .sx__week-grid__date {
+html.dark .calendar-container .sx__week-grid__date {
   background-color: hsl(var(--background)) !important;
   border-color: hsl(var(--border)) !important;
 }
 
-html.dark .sx__week-grid__day-name,
-html.dark .sx__week-grid__date-number {
+html.dark .calendar-container .sx__week-grid__day-name,
+html.dark .calendar-container .sx__week-grid__date-number {
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx__date-grid-day {
+html.dark .calendar-container .sx__date-grid-day {
   background-color: hsl(var(--background)) !important;
   border-color: hsl(var(--border)) !important;
 }
 
-html.dark .sx__date-grid-event-text {
+html.dark .calendar-container .sx__date-grid-event-text {
   color: hsl(var(--foreground)) !important;
 }
 
-html.dark .sx__week-header-border {
+html.dark .calendar-container .sx__week-header-border {
   border-color: hsl(var(--border)) !important;
 }
 
-html.dark .sx__spacer {
+html.dark .calendar-container .sx__spacer {
   background-color: transparent !important;
 }
 
-.sx__week-header {
+.calendar-container .sx__week-header {
   background-color: hsl(var(--background)) !important;
 }
 
-.sx__view-selection {
+.calendar-container .sx__view-selection {
   display: none !important;
 }
